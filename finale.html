@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>You Made It! 💕</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;800&family=Playfair+Display:ital,wght@0,700;1,400;1,700&display=swap" rel="stylesheet">
+<style>
+:root{--wood:#7a4a2a;--heart:#e8174a;--yellow:#ffd93d;--cream:#fef9f0;--sky:#87ceeb;--building:#f5f0eb;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--sky);font-family:'Nunito',sans-serif;min-height:100vh;overflow:hidden;position:relative;}
+
+/* Sky */
+.sky{position:fixed;inset:0;background:linear-gradient(180deg,#5ba8d4 0%,#87ceeb 40%,#c5e8f5 70%,#e8f4ea 100%);}
+
+/* Floating particles */
+.particle{position:fixed;pointer-events:none;animation:floatUp linear infinite;font-size:16px;}
+@keyframes floatUp{0%{transform:translateY(100vh) rotate(0);opacity:1}100%{transform:translateY(-20vh) rotate(360deg);opacity:0}}
+
+/* Scene container */
+.scene{position:fixed;bottom:0;left:0;right:0;height:75vh;display:flex;justify-content:center;align-items:flex-end;}
+
+/* Street */
+.street{position:absolute;bottom:0;left:0;right:0;height:80px;background:#888;background:linear-gradient(180deg,#7a7a7a 0%,#5a5a5a 100%);}
+.street::before{content:'';position:absolute;top:35px;left:0;right:0;height:8px;background:repeating-linear-gradient(90deg,#fff 0,#fff 40px,transparent 40px,transparent 80px);}
+.sidewalk{position:absolute;bottom:80px;left:0;right:0;height:30px;background:#c8c0b0;border-top:3px solid #b0a898;}
+
+/* Building SVG */
+.building-wrap{position:absolute;bottom:108px;left:50%;transform:translateX(-50%);width:min(400px,80vw);animation:buildingReveal 1s ease 0.3s both;}
+@keyframes buildingReveal{from{opacity:0;transform:translateX(-50%) translateY(30px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* Mailbox */
+.mailbox-wrap{position:absolute;bottom:108px;left:calc(50% + min(160px,32vw));animation:mailboxReveal 1.2s ease 0.8s both;}
+@keyframes mailboxReveal{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.mailbox-wrap:hover svg{filter:brightness(1.15);}
+
+.mailbox-btn{background:none;border:none;cursor:pointer;display:block;animation:pulse 2s ease-in-out 2s infinite;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.mailbox-label{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--wood);text-align:center;margin-top:4px;background:rgba(255,255,255,.85);padding:3px 8px;border-radius:10px;white-space:nowrap;}
+
+/* Avatars outside building */
+.outdoor-avatars{position:absolute;bottom:110px;left:calc(50% - min(160px,35vw));display:flex;gap:8px;animation:avatarsReveal 1.5s ease 1s both;}
+@keyframes avatarsReveal{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* Congrats banner */
+.banner{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--heart);color:white;font-family:'Press Start 2P',monospace;font-size:9px;padding:10px 20px;border-radius:4px;border:3px solid #a00;box-shadow:3px 3px 0 rgba(0,0,0,.3);z-index:30;white-space:nowrap;animation:bannerDrop .8s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes bannerDrop{from{transform:translateX(-50%) translateY(-60px)}to{transform:translateX(-50%) translateY(0)}}
+
+/* Letter modal */
+.letter-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;}
+.letter-modal.show{display:flex;}
+.letter-envelope{background:var(--cream);border:5px solid var(--wood);border-radius:4px;max-width:560px;width:100%;margin:auto;box-shadow:0 0 0 3px var(--yellow),10px 10px 0 rgba(0,0,0,.4);animation:letterOpen .5s cubic-bezier(.34,1.56,.64,1);}
+@keyframes letterOpen{from{transform:scale(.8) rotate(-3deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+
+.letter-env-top{background:var(--heart);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:4px solid #a00;}
+.letter-env-top h2{font-family:'Press Start 2P',monospace;font-size:10px;color:white;text-shadow:1px 1px 0 rgba(0,0,0,.3);}
+.close-btn{background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.4);color:white;font-family:'Press Start 2P',monospace;font-size:8px;padding:6px 12px;border-radius:4px;cursor:pointer;}
+.close-btn:hover{background:rgba(255,255,255,.35);}
+
+.letter-body{padding:32px 36px;}
+.letter-paper{background:white;border:1px solid #e8d5b0;border-radius:2px;padding:32px 28px;position:relative;font-size:15px;line-height:2;color:#3a2a1a;font-family:'Playfair Display',serif;}
+.letter-paper::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:repeating-linear-gradient(90deg,var(--heart) 0,var(--heart) 10px,transparent 10px,transparent 20px);}
+.letter-lines::before{content:'';position:absolute;inset:32px;background-image:repeating-linear-gradient(transparent,transparent 31px,#e8e0d0 31px,#e8e0d0 32px);pointer-events:none;}
+.letter-greeting{font-style:italic;font-weight:700;font-size:18px;color:var(--heart);margin-bottom:20px;display:block;}
+.letter-placeholder{background:#fff8f0;border:2px dashed #d4a070;border-radius:6px;padding:20px;text-align:center;font-size:14px;color:#888;font-family:'Nunito',sans-serif;line-height:1.7;}
+.letter-placeholder strong{color:var(--wood);}
+.letter-sig{text-align:right;margin-top:24px;font-style:italic;font-size:18px;color:var(--heart);font-weight:700;}
+
+.letter-close-btn{width:100%;background:var(--heart);color:white;border:none;border-bottom:5px solid #a00;padding:16px;font-family:'Press Start 2P',monospace;font-size:9px;cursor:pointer;border-radius:0 0 2px 2px;transition:all .1s;}
+.letter-close-btn:hover{background:#d0102a;}
+.letter-close-btn:active{border-bottom-width:2px;transform:translateY(2px);}
+
+/* Trees */
+.tree{position:absolute;bottom:108px;}
+</style>
+</head>
+<body>
+
+<div class="sky"></div>
+
+<!-- Floating particles -->
+<div id="particles"></div>
+
+<!-- Congrats banner -->
+<div class="banner">🎉 YOU MADE IT BABES! 🎉</div>
+
+<div class="scene">
+  <!-- Street + sidewalk -->
+  <div class="street"></div>
+  <div class="sidewalk"></div>
+
+  <!-- Left tree -->
+  <div class="tree" style="left:calc(50% - min(220px,45vw))">
+    <svg width="60" height="100" viewBox="0 0 60 100">
+      <rect x="24" y="65" width="12" height="35" fill="#5a3a1a"/>
+      <ellipse cx="30" cy="50" rx="28" ry="32" fill="#3d7a1f"/>
+      <ellipse cx="30" cy="38" rx="22" ry="26" fill="#5a9e32"/>
+      <ellipse cx="30" cy="28" rx="16" ry="20" fill="#7ec850"/>
+    </svg>
+  </div>
+
+  <!-- Building (SF white ornate style) -->
+  <div class="building-wrap">
+    <svg width="100%" viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg">
+      <!-- Main building body -->
+      <rect x="40" y="40" width="320" height="480" fill="#f0ece4" rx="2"/>
+      <!-- Building shadow/depth -->
+      <rect x="40" y="40" width="320" height="480" fill="none" stroke="#d8d0c0" stroke-width="3" rx="2"/>
+
+      <!-- Ornate top cornice -->
+      <rect x="20" y="28" width="360" height="24" fill="#e8e0d4" rx="2"/>
+      <rect x="20" y="24" width="360" height="8" fill="#d0c8bc"/>
+      <!-- Decorative dentils -->
+      <rect x="20" y="24" width="360" height="5" fill="none" stroke="#b8b0a4" stroke-width="1"/>
+
+      <!-- Rooftop details -->
+      <rect x="60" y="16" width="280" height="18" fill="#e8e0d4" rx="1"/>
+      <rect x="80" y="8" width="240" height="12" fill="#ddd8d0" rx="1"/>
+
+      <!-- Floors (12 floors) -->
+      <!-- Floor lines -->
+      <line x1="40" y1="95" x2="360" y2="95" stroke="#d0c8bc" stroke-width="1.5"/>
+      <line x1="40" y1="135" x2="360" y2="135" stroke="#d0c8bc" stroke-width="1.5"/>
+      <line x1="40" y1="175" x2="360" y2="175" stroke="#d0c8bc" stroke-width="1.5"/>
+      <line x1="40" y1="215" x2="360" y2="215" stroke="#d0c8bc" stroke-width="1.5"/>
+      <line x1="40" y1="255" x2="360" y2="255" stroke="#d0c8bc" stroke-width="1.5"/>
+      <line x1="40" y1="295" x2="360" y2="295" stroke="#d0c8bc" stroke-width="1.5"/>
+      <line x1="40" y1="335" x2="360" y2="335" stroke="#d0c8bc" stroke-width="1.5"/>
+      <line x1="40" y1="375" x2="360" y2="375" stroke="#d0c8bc" stroke-width="1.5"/>
+      <line x1="40" y1="415" x2="360" y2="415" stroke="#d0c8bc" stroke-width="1.5"/>
+
+      <!-- Windows - 3 per floor, 10 floors -->
+      <defs>
+        <rect id="win" width="48" height="28" rx="2" fill="#a8c8e0"/>
+        <rect id="winlit" width="48" height="28" rx="2" fill="#ffd080"/>
+      </defs>
+      <!-- Row 1 -->
+      <use href="#win" x="72" y="52"/><use href="#winlit" x="176" y="52"/><use href="#win" x="280" y="52"/>
+      <use href="#win" x="72" y="100"/><use href="#win" x="176" y="100"/><use href="#winlit" x="280" y="100"/>
+      <use href="#winlit" x="72" y="140"/><use href="#win" x="176" y="140"/><use href="#win" x="280" y="140"/>
+      <use href="#win" x="72" y="180"/><use href="#winlit" x="176" y="180"/><use href="#win" x="280" y="180"/>
+      <use href="#win" x="72" y="220"/><use href="#win" x="176" y="220"/><use href="#winlit" x="280" y="220"/>
+      <use href="#winlit" x="72" y="260"/><use href="#win" x="176" y="260"/><use href="#win" x="280" y="260"/>
+      <use href="#win" x="72" y="300"/><use href="#winlit" x="176" y="300"/><use href="#winlit" x="280" y="300"/>
+      <use href="#win" x="72" y="340"/><use href="#win" x="176" y="340"/><use href="#win" x="280" y="340"/>
+      <use href="#win" x="72" y="380"/><use href="#winlit" x="176" y="380"/><use href="#win" x="280" y="380"/>
+
+      <!-- Window frames -->
+      <rect x="72" y="52" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="176" y="52" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="280" y="52" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="72" y="100" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="176" y="100" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="280" y="100" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="72" y="140" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="176" y="140" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="280" y="140" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="72" y="180" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="176" y="180" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="280" y="180" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="72" y="220" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="176" y="220" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="280" y="220" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="72" y="260" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="176" y="260" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="280" y="260" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="72" y="300" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="176" y="300" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="280" y="300" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="72" y="340" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="176" y="340" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="280" y="340" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="72" y="380" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="176" y="380" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+      <rect x="280" y="380" width="48" height="28" rx="2" fill="none" stroke="#c0b8ac" stroke-width="2"/>
+
+      <!-- Grand entrance -->
+      <rect x="140" y="430" width="120" height="90" fill="#e0d8cc" rx="2"/>
+      <!-- Arched door -->
+      <path d="M155 520 L155 456 Q200 430 245 456 L245 520 Z" fill="#4a3020"/>
+      <path d="M155 456 Q200 430 245 456" fill="none" stroke="#3a2010" stroke-width="2"/>
+      <!-- Door handle -->
+      <circle cx="192" cy="490" r="4" fill="#c8a050"/>
+      <!-- Ornate arch surround -->
+      <path d="M138 520 L138 452 Q200 418 262 452 L262 520" fill="none" stroke="#c0b8ac" stroke-width="3"/>
+      <!-- Columns -->
+      <rect x="140" y="430" width="12" height="90" fill="#e8e0d4"/>
+      <rect x="248" y="430" width="12" height="90" fill="#e8e0d4"/>
+      <!-- Column tops -->
+      <rect x="135" y="425" width="22" height="8" fill="#d8d0c4" rx="1"/>
+      <rect x="243" y="425" width="22" height="8" fill="#d8d0c4" rx="1"/>
+    </svg>
+  </div>
+
+  <!-- Avatars outside -->
+  <div class="outdoor-avatars">
+    <svg width="40" height="56" viewBox="0 0 36 52">
+      <ellipse cx="18" cy="50" rx="10" ry="3" fill="rgba(0,0,0,.2)"/>
+      <rect x="11" y="38" width="6" height="12" rx="2" fill="#1a0a00"/>
+      <rect x="19" y="38" width="6" height="12" rx="2" fill="#1a0a00"/>
+      <rect x="10" y="47" width="8" height="4" rx="2" fill="#111"/>
+      <rect x="18" y="47" width="8" height="4" rx="2" fill="#111"/>
+      <rect x="8" y="22" width="20" height="18" rx="3" fill="#1a1a2e"/>
+      <rect x="15" y="22" width="6" height="6" fill="white" opacity=".6"/>
+      <rect x="2" y="23" width="7" height="14" rx="3" fill="#1a1a2e"/>
+      <rect x="27" y="23" width="7" height="14" rx="3" fill="#1a1a2e"/>
+      <circle cx="5" cy="37" r="3.5" fill="#5a2d0c"/>
+      <circle cx="31" cy="37" r="3.5" fill="#5a2d0c"/>
+      <rect x="14" y="18" width="8" height="7" rx="2" fill="#5a2d0c"/>
+      <ellipse cx="18" cy="15" rx="12" ry="13" fill="#5a2d0c"/>
+      <ellipse cx="6.5" cy="15" rx="2.5" ry="3" fill="#5a2d0c"/>
+      <ellipse cx="29.5" cy="15" rx="2.5" ry="3" fill="#5a2d0c"/>
+      <ellipse cx="18" cy="6" rx="12" ry="8" fill="#111"/>
+      <circle cx="10" cy="9" r="5" fill="#111"/>
+      <circle cx="26" cy="9" r="5" fill="#111"/>
+      <circle cx="18" cy="3" r="5" fill="#0a0a0a"/>
+      <ellipse cx="13" cy="15" rx="2.5" ry="2.5" fill="white"/>
+      <ellipse cx="23" cy="15" rx="2.5" ry="2.5" fill="white"/>
+      <circle cx="13.5" cy="15.5" r="1.5" fill="#2d1000"/>
+      <circle cx="23.5" cy="15.5" r="1.5" fill="#2d1000"/>
+      <path d="M 13 20 Q 18 23 23 20" stroke="#3a1a00" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    </svg>
+    <svg width="40" height="56" viewBox="0 0 36 52">
+      <ellipse cx="18" cy="50" rx="10" ry="3" fill="rgba(0,0,0,.2)"/>
+      <rect x="11" y="38" width="6" height="12" rx="2" fill="#4a2a10"/>
+      <rect x="19" y="38" width="6" height="12" rx="2" fill="#4a2a10"/>
+      <rect x="10" y="46" width="8" height="5" rx="2" fill="#7a4a2a"/>
+      <rect x="18" y="46" width="8" height="5" rx="2" fill="#7a4a2a"/>
+      <rect x="8" y="22" width="20" height="18" rx="3" fill="#c8905a"/>
+      <rect x="2" y="23" width="7" height="14" rx="3" fill="#c8905a"/>
+      <rect x="27" y="23" width="7" height="14" rx="3" fill="#c8905a"/>
+      <circle cx="5" cy="37" r="3.5" fill="#f5d5b5"/>
+      <circle cx="31" cy="37" r="3.5" fill="#f5d5b5"/>
+      <rect x="14" y="18" width="8" height="7" rx="2" fill="#f5d5b5"/>
+      <ellipse cx="18" cy="14" rx="12" ry="13" fill="#f5d5b5"/>
+      <ellipse cx="18" cy="6" rx="13" ry="9" fill="#1a0a14"/>
+      <rect x="5" y="8" width="7" height="28" rx="3" fill="#1a0a14"/>
+      <rect x="24" y="8" width="7" height="26" rx="3" fill="#1a0a14"/>
+      <ellipse cx="13" cy="14" rx="3" ry="2.2" fill="white"/>
+      <ellipse cx="23" cy="14" rx="3" ry="2.2" fill="white"/>
+      <ellipse cx="13" cy="14.2" rx="1.8" ry="1.6" fill="#2d1020"/>
+      <ellipse cx="23" cy="14.2" rx="1.8" ry="1.6" fill="#2d1020"/>
+      <path d="M 14 19 Q 18 22.5 22 19" stroke="#e8808a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      <ellipse cx="10" cy="17" rx="3" ry="2" fill="#ffb0b0" opacity=".4"/>
+      <ellipse cx="26" cy="17" rx="3" ry="2" fill="#ffb0b0" opacity=".4"/>
+    </svg>
+  </div>
+
+  <!-- Mailbox -->
+  <div class="mailbox-wrap">
+    <button class="mailbox-btn" onclick="openLetter()" id="mailboxBtn">
+      <svg width="70" height="90" viewBox="0 0 70 90" id="mailboxSvg">
+        <!-- Post -->
+        <rect x="31" y="55" width="8" height="35" fill="#5a3a1a"/>
+        <!-- Box body -->
+        <rect x="10" y="28" width="50" height="30" rx="4" fill="#c8302a"/>
+        <!-- Box top (rounded) -->
+        <path d="M10 38 Q10 20 35 20 Q60 20 60 38" fill="#d04030"/>
+        <!-- Flag -->
+        <rect x="58" y="25" width="3" height="20" fill="#888"/>
+        <rect x="61" y="25" width="12" height="8" fill="#e8174a"/>
+        <!-- Heart on mailbox -->
+        <path d="M30 42 C30 38 23 36 23 42 C23 47 30 52 35 55 C40 52 47 47 47 42 C47 36 40 38 40 42 C38 39 32 39 30 42Z" fill="white" opacity=".9"/>
+        <!-- Slot -->
+        <rect x="18" y="44" width="22" height="4" rx="2" fill="#8a2020"/>
+        <!-- Shine -->
+        <ellipse cx="25" cy="30" rx="8" ry="4" fill="rgba(255,255,255,.2)"/>
+        <!-- Bounce hint arrow -->
+        <text x="35" y="16" text-anchor="middle" font-size="12" fill="#ffd93d" style="animation:bounce 1s ease-in-out infinite">👆</text>
+      </svg>
+    </button>
+    <div class="mailbox-label">Click me! 💌</div>
+  </div>
+
+  <!-- Right tree — moved further right so it doesn't overlap the mailbox -->
+  <div class="tree" style="right:2%">
+    <svg width="60" height="100" viewBox="0 0 60 100">
+      <rect x="24" y="65" width="12" height="35" fill="#5a3a1a"/>
+      <ellipse cx="30" cy="50" rx="28" ry="32" fill="#3d7a1f"/>
+      <ellipse cx="30" cy="38" rx="22" ry="26" fill="#5a9e32"/>
+      <ellipse cx="30" cy="28" rx="16" ry="20" fill="#7ec850"/>
+    </svg>
+  </div>
+</div>
+
+<!-- Love Letter Modal -->
+<div class="letter-modal" id="letterModal">
+  <div class="letter-envelope">
+    <div class="letter-env-top">
+      <h2>💌 YOUR LOVE LETTER</h2>
+      <button class="close-btn" onclick="closeLetter()">✕ Close</button>
+    </div>
+    <div class="letter-body">
+      <div class="letter-paper">
+        <span class="letter-greeting">My dearest Babes,</span>
+        <div id="letterContent">
+          <p>Happy 4 years my love. Wow, I can't believe we made it here. It's been such a crazy ride but I wouldn't have had it any other way. To graduating college, moving to a new city, starting our first adult jobs, traveling to Japan for the first time, and just doing life together. We've experienced some of life's most monumental moments together and that's something that can never be replaced, so those moments have a very special place in my life.</p>
+
+          <p>As I'm writing this letter, I can't help but think about how far we've come and where it all started. My favorite thing is going down memory lane because there are a lot of fond ones. When I think about where it all started, I remember it being super unexpected. I wasn't in the headspace for a romantic relationship, I was pretty happy with my independent life, but then you came along and rewired my brain. You were just so good. I never met someone as good as you, as kind as you, as pure hearted as you. It was like a shock to my system that someone like you existed.</p>
+
+          <p>You made the effort to see me, even when I refused because I had so much work for class. You did everything to take care of me and make me feel special without asking for anything in return. Even when my brain said "I'm not ready for this" you did everything to make up for my fear and doubt. I wasn't sure that I was ready for a relationship, but you showed me that it's not about the perfect time, but more the perfect person. You were my perfect person.</p>
+
+          <p>In the beginning, I wasn't sure if I was the perfect person for you. There was a lot for me to unlearn, relearn, and improve on, so I could be your perfect person. Throughout it all, even when it was hard, you remained patient, hopeful, and my rock. That still remains true to this day. And more than I can put into words, I appreciate and love you so much for it.</p>
+
+          <p>Fast forward 4 years — the honeymoon phase is gone, the worse parts of us have come out of hiding, and we are faced with the raw versions of each other. The fights are more intense, the almost breaking up feels more real, and the prospect of figuring out who we were without each other is scary. What's left after all of that, is just two people who love each other deeply and have given everything they can, fighting for a chance to make it to the other side, hoping and praying they can make it over together. Not just together, but together and genuinely happy.</p>
+
+          <p>Whenever I see an old couple, first it's a sweet sight, but then I think about how many times they fought, broke up, found each other again, had to forgive, and endure together — and at the end of it still choosing each other. It's a sweet thing, but more than that, it's everything that is beautiful about love and life. We are so lucky to have found each other when we did because there is still so much to experience together and I want to do it all. More importantly, I want to do it all with you.</p>
+
+          <p>I have a running list of things that I started when we first met. Things that made my heart flutter, things that meant a lot, things that I wanted to remember and look back on if things ever got hard. I want to keep adding to this list.</p>
+
+          <div style="background:#fff8f0;border-left:4px solid #e8174a;padding:16px 20px;margin:16px 0;border-radius:0 8px 8px 0;">
+            <strong style="color:#e8174a;display:block;margin-bottom:12px;font-family:'Press Start 2P',monospace;font-size:8px;">Things I never want to forget 💕</strong>
+            <ul style="list-style:none;padding:0;margin:0;font-size:13px;">
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Sent me an Uber to his place at night when he was sick</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Buys me chocolate covered pretzels</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Remembered that I said I wanna go to a nice dinner</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Feeds me, shares his food</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Walks with me at night</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Holds my things</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Buys me milk at Gordoughs</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Takes care of me when drunk (Hook'd Social)</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Shields me from seeing dead animals on the road</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Follows sidewalk rule</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Brought me down food while I was studying at Villas</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Toothless</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Puts up the loose fire hydrant</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Brings Connect 4</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 KNOWS MAGIC TRICKS</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Formal night… 🤭</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Doesn't let me see the bill</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Wins every game we play</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Stays up late to study with me</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Eye contact hella</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Takes the most beautiful pictures of me</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Cuddles and holds me after</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Kept the flower I got him</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Lets me borrow his clothes</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Doesn't make my friends pay him back (Safah uber)</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 His friends are so cool</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Food = happiness</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Bought me preg test</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Stays calm in scary situations because he knows I'll get more anxious if he doesn't</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Wanted to be in the bathroom with me while peeing on the test</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Brings me chocolates and little toys whenever he comes to my place</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Took me around Seattle and paid for almost everything, so generous</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Ran in the cold, wet rain to get me Pepto Bismol for my stomach ache during dinner in Seattle</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Massages my stomach when I'm in pain</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Extended Airbnb checkout to 8pm without telling me</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Told me he loves me — June 5th</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Holds my luggage</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Picks me up from the airport</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Takes me anywhere I want to go</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Writes me a letter</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Writes me a poem — 3 month anniversary</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Makes long distance easy</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Stutters in a cute way</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Planned a birthday surprise with all my friends + got me AirPods, shoes, match boot, and so much more</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Tells me he doesn't love me less after our arguments</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Ninnu prey-miss-thun-naanu</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Got me a heating pad for my cramps</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Doesn't give up when things get hard</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Points out my flaws but doesn't love me less for them</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Slither.io partner</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Doesn't give up on me or us</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Best travel partner ever — we make a good team</li>
+              <li style="padding:7px 0;border-bottom:1px solid #f0ddc8;">💕 Feet massages</li>
+              <li style="padding:7px 0;">💕 Head massages when I have a headache</li>
+            </ul>
+          </div>
+
+          <p>In this life, I've realized the power of choice. Sure, I believe in fate. Fate is the thing that gives you something great, but choice is what keeps that great thing alive. All that to say, I choose you every day. I've been choosing you every day for the past 4 years and I intend to keep choosing you… even when the going gets tough, even when we are grey and wrinkly one day. I will choose you intentionally, not because it's the easy or safe thing to do, but because I really want to.</p>
+
+          <p>As I'm writing this and looking around our apartment, I can't help but think about what a beautiful life we've built together. If we can do this, imagine what we can do in another 4 years… It only gets better from here.</p>
+
+          <p>I love you babe. Here's to 4 years and many more to come. I can't wait. 🥂</p>
+        </div>
+        <div class="letter-sig">Forever yours, Your Love 💕</div>
+      </div>
+    </div>
+    <button class="letter-close-btn" onclick="closeLetter()">Close & Celebrate 🎉</button>
+  </div>
+</div>
+
+<script>
+// Floating particles
+const emojis=['💕','🌸','⭐','✨','💖','🌟','💝','🎊','🌺'];
+const pEl=document.getElementById('particles');
+function spawnParticle(){
+  const p=document.createElement('div');
+  p.className='particle';
+  p.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+  p.style.left=Math.random()*100+'vw';
+  p.style.animationDuration=(8+Math.random()*8)+'s';
+  p.style.animationDelay='0s';
+  pEl.appendChild(p);
+  setTimeout(()=>p.remove(),16000);
+}
+for(let i=0;i<6;i++)setTimeout(spawnParticle,i*500);
+setInterval(spawnParticle,1500);
+
+// Mailbox animation
+let opened=false;
+function openLetter(){
+  if(opened)return;
+  opened=true;
+  document.getElementById('mailboxBtn').style.animation='none';
+  // Mailbox opens - little animation
+  const svg=document.getElementById('mailboxSvg');
+  svg.style.transform='scale(1.15)';
+  svg.style.transition='transform .2s ease';
+  setTimeout(()=>{
+    svg.style.transform='scale(1)';
+    document.getElementById('letterModal').classList.add('show');
+    // Fireworks!
+    launchFireworks();
+  },200);
+}
+
+function closeLetter(){
+  document.getElementById('letterModal').classList.remove('show');
+}
+
+function launchFireworks(){
+  const fw=['🎉','🎊','💕','🌟','✨','💥','🎆'];
+  for(let i=0;i<20;i++){
+    setTimeout(()=>{
+      const p=document.createElement('div');
+      p.className='particle';
+      p.textContent=fw[Math.floor(Math.random()*fw.length)];
+      p.style.left=Math.random()*100+'vw';
+      p.style.fontSize='28px';
+      p.style.animationDuration='.8s';
+      p.style.animationDelay='0s';
+      pEl.appendChild(p);
+      setTimeout(()=>p.remove(),800);
+    },i*80);
+  }
+}
+
+// Clear game progress
+localStorage.removeItem('anniv_done');
+</script>
+</body>
+</html>

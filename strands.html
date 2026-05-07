@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strands ♥ Stop 3</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #fef9f0;
+  --wood: #7a4a2a;
+  --heart: #e8174a;
+  --yellow: #ffd93d;
+  --found-blue: #a8d8ea;
+  --found-blue-dark: #4a9abf;
+  --spangram-yellow: #f9df6d;
+  --spangram-dark: #b8940a;
+  --selecting: #4fc3f7;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  font-family: 'Nunito', sans-serif;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding-bottom: 40px;
+  user-select: none; -webkit-user-select: none;
+}
+
+.top-bar {
+  width: 100%; max-width: 480px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 3px solid var(--wood);
+  margin-bottom: 8px;
+}
+.back-link { font-family:'Press Start 2P',monospace; font-size:7px; color:var(--wood); text-decoration:none; }
+.game-title { font-family:'Press Start 2P',monospace; font-size:12px; color:var(--wood); }
+.stop-pill { font-family:'Press Start 2P',monospace; font-size:7px; background:var(--heart); color:white; padding:5px 10px; border-radius:12px; }
+
+.theme-wrap { text-align:center; margin:4px 0 10px; }
+.theme-eyebrow { font-family:'Press Start 2P',monospace; font-size:7px; color:#888; margin-bottom:5px; letter-spacing:1px; }
+.theme-title { font-family:'Press Start 2P',monospace; font-size:13px; color:var(--wood); }
+
+.found-row {
+  display:flex; flex-wrap:wrap; gap:6px; justify-content:center;
+  padding:0 16px; margin-bottom:10px;
+  max-width:480px; width:100%; min-height:32px;
+}
+.found-pill {
+  font-family:'Press Start 2P',monospace; font-size:7px;
+  padding:5px 12px; border-radius:20px;
+  animation:pillPop .35s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes pillPop { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+.found-pill.normal { background:var(--found-blue); border:2px solid var(--found-blue-dark); color:#1a5a7a; }
+.found-pill.spangram { background:var(--spangram-yellow); border:2px solid var(--spangram-dark); color:#6a4a00; }
+
+.hint-bar {
+  display:flex; align-items:center; gap:10px;
+  font-family:'Press Start 2P',monospace; font-size:7px;
+  color:#888; margin-bottom:10px;
+}
+.hint-btn {
+  background:white; border:2px solid var(--wood); border-radius:20px;
+  padding:5px 14px; font-family:'Press Start 2P',monospace; font-size:7px;
+  color:var(--wood); cursor:pointer; transition:all .15s;
+}
+.hint-btn:hover:not(:disabled) { background:#f5e8d8; }
+.hint-btn:disabled { opacity:.4; cursor:not-allowed; }
+
+/* Grid wrapper holds SVG overlay + cells */
+.grid-wrap {
+  position:relative;
+  max-width:380px; width:calc(100% - 32px);
+  margin-bottom:10px;
+  touch-action:none;
+}
+.line-svg {
+  position:absolute; top:0; left:0; width:100%; height:100%;
+  pointer-events:none; z-index:5; overflow:visible;
+}
+
+#grid {
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:6px;
+  width:100%;
+}
+
+.cell {
+  aspect-ratio:1;
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(9px,3.5vw,14px);
+  color:var(--wood);
+  background:white;
+  border:2px solid #e0c8a0;
+  cursor:pointer;
+  transition:background .1s, transform .1s, border-color .1s;
+  position:relative; z-index:10;
+  -webkit-tap-highlight-color:transparent;
+}
+.cell:hover { background:#fff5e8; }
+
+.cell.selecting {
+  background:var(--selecting);
+  color:white; border-color:var(--selecting);
+  transform:scale(1.1);
+}
+.cell.found-normal {
+  background:var(--found-blue);
+  border-color:var(--found-blue-dark);
+  color:#1a5a7a;
+}
+.cell.found-spangram {
+  background:var(--spangram-yellow);
+  border-color:var(--spangram-dark);
+  color:#6a4a00;
+}
+.cell.hint-glow { animation:hintGlow 1.5s ease-in-out 3; }
+@keyframes hintGlow {
+  0%,100%{box-shadow:none}
+  50%{box-shadow:0 0 0 5px rgba(249,223,109,.8),0 0 16px rgba(249,223,109,.5)}
+}
+.cell.wrong-shake { animation:wrongShake .4s ease; }
+@keyframes wrongShake {
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-4px)}40%{transform:translateX(4px)}
+  60%{transform:translateX(-3px)}80%{transform:translateX(3px)}
+}
+
+#current-word {
+  font-family:'Press Start 2P',monospace; font-size:13px; color:var(--wood);
+  text-align:center; min-height:26px; margin-bottom:6px; letter-spacing:3px;
+}
+#msg {
+  font-family:'Press Start 2P',monospace; font-size:7px; color:var(--heart);
+  text-align:center; min-height:18px; line-height:1.8; margin-bottom:4px;
+}
+
+.result-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:200; align-items:center; justify-content:center; padding:20px; }
+.result-overlay.show { display:flex; }
+.result-box { background:var(--bg); border:5px solid var(--wood); border-radius:4px; padding:28px 24px; max-width:420px; width:100%; text-align:center; box-shadow:0 0 0 2px var(--yellow),8px 8px 0 rgba(0,0,0,.4); animation:popIn .4s cubic-bezier(.34,1.56,.64,1); }
+@keyframes popIn { from{transform:scale(.5);opacity:0} to{transform:scale(1);opacity:1} }
+.result-box .re { font-size:52px; display:block; margin-bottom:12px; }
+.result-box h2 { font-family:'Press Start 2P',monospace; font-size:11px; color:var(--wood); margin-bottom:12px; line-height:1.8; }
+.result-box p { font-size:13px; color:#5a3a1a; line-height:1.9; margin-bottom:20px; }
+.r-btn { display:inline-block; background:var(--heart); color:white; font-family:'Press Start 2P',monospace; font-size:9px; padding:14px 22px; border:none; border-radius:4px; cursor:pointer; text-decoration:none; box-shadow:3px 3px 0 #a00; transition:all .1s; margin:4px; }
+.r-btn:hover { transform:translateY(-2px); }
+.r-btn-sec { background:var(--wood); box-shadow:3px 3px 0 #3a1a00; }
+
+.result-close-btn{position:absolute;top:10px;right:14px;background:none;border:none;font-size:20px;cursor:pointer;color:#888;line-height:1;padding:4px;}
+.result-close-btn:hover{color:#333;}
+.result-box{position:relative;}
+.step-closer{font-family:'Press Start 2P',monospace;font-size:8px;color:#e8174a;background:#fff0f5;border:2px solid #ffb3cc;border-radius:8px;padding:10px 14px;margin-bottom:16px;line-height:1.8;}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="index.html" class="back-link">← MAP</a>
+  <div class="game-title">STRANDS</div>
+  <div class="stop-pill">STOP 3</div>
+</div>
+
+<div class="theme-wrap">
+  <div class="theme-eyebrow">TODAY'S THEME</div>
+  <div class="theme-title">"Where To Next? 🌍"</div>
+</div>
+
+<div class="found-row" id="foundRow"></div>
+
+<div class="hint-bar">
+  <button class="hint-btn" id="hintBtn" onclick="useHint()" disabled>💡 Hint</button>
+  <span id="hintCount">earn hints by making 3 wrong guesses</span>
+</div>
+
+<div id="current-word"></div>
+
+<div class="grid-wrap" id="gridWrap">
+  <svg class="line-svg" id="lineSvg"></svg>
+  <div id="grid"></div>
+</div>
+
+<div id="msg"></div>
+
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-box"><button class="result-close-btn" onclick="closeResult()">✕</button>
+    <span class="re" id="rEmoji">🎉</span>
+    <h2 id="rTitle"></h2>
+    <div id="stepCloser" class="step-closer" style="display:none">🗺️ One step closer to your love letter — keep going!</div>
+    <p id="rMsg"></p>
+    <div id="winBtns" style="display:none;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px;">
+      <a href="index.html?done=3" class="r-btn">Back to Map →</a>
+      <button class="r-btn r-btn-secondary" onclick="closeResult()">Stay &amp; Look 👀</button>
+    </div>
+    <div id="loseBtns" style="display:none;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px;">
+      <button class="r-btn r-btn-secondary" onclick="resetGame()">Try Again</button>
+      <button class="r-btn" onclick="closeResult()">Keep Looking 👀</button>
+    </div></div>
+</div>
+<script>
+// ── GRID: 6 cols × 8 rows = 48 cells (exact fill, no blanks) ──────────────
+// All paths independently verified: correct spelling + fully adjacent cells
+const ROWS = 8, COLS = 6;
+
+const LAYOUT = [
+  ['T','R','A','V','E','L'],  // row 0 — spangram: TRAVEL (L→R)
+  ['G','O','T','G','N','I'],  // row 1 — spangram: INGTOG (R→L path)
+  ['E','T','H','E','R','J'],  // row 2 — spangram: ETHER (L→R) + J starts JAPAN
+  ['C','A','N','C','U','A'],  // row 3
+  ['M','A','L','N','A','P'],  // row 4
+  ['U','B','I','S','N','C'],  // row 5
+  ['T','T','A','E','I','H'],  // row 6
+  ['L','E','O','G','A','C'],  // row 7
+];
+
+const WORD_PATHS = {
+  'JAPAN':   [[2,5],[3,5],[4,5],[4,4],[5,4]],
+  'CANCUN':  [[3,0],[3,1],[3,2],[3,3],[3,4],[4,3]],
+  'MALIBU':  [[4,0],[4,1],[4,2],[5,2],[5,1],[5,0]],
+  'SEATTLE': [[5,3],[6,3],[6,2],[6,1],[6,0],[7,0],[7,1]],
+  'CHICAGO': [[5,5],[6,5],[6,4],[7,5],[7,4],[7,3],[7,2]],
+  'TRAVELING TOGETHER': [
+    [0,0],[0,1],[0,2],[0,3],[0,4],[0,5],   // TRAVEL  row0 L→R
+    [1,5],[1,4],[1,3],[1,2],[1,1],[1,0],   // INGTOG  row1 R→L
+    [2,0],[2,1],[2,2],[2,3],[2,4],         // ETHER   row2 L→R
+  ],
+};
+
+const WORD_TYPES = {
+  'JAPAN':'normal','CANCUN':'normal','MALIBU':'normal',
+  'SEATTLE':'normal','CHICAGO':'normal',
+  'TRAVELING TOGETHER':'spangram',
+};
+
+const WORD_MSGS = {
+  'JAPAN':   'Japan!! Our most magical trip 🗾',
+  'CANCUN':  'Cancun! Sun, beach, and us 🏖️',
+  'MALIBU':  'Malibu sunsets 🌊',
+  'SEATTLE': 'Seattle 🌧️ — where we said I love you',
+  'CHICAGO': 'Chicago deep dish era 🍕',
+  'TRAVELING TOGETHER': '✈️ TRAVELING TOGETHER — the spangram! That\'s always us 💕',
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let selecting = false;
+let currentPath = [];
+let foundWords = [];
+let cellStates = {};
+let hints = 0;
+let wrongStreak = 0;
+
+function cellKey(r,c) { return `${r},${c}`; }
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+function init() {
+  selecting = false; currentPath = []; foundWords = [];
+  cellStates = {}; hints = 0; wrongStreak = 0;
+  renderGrid();
+  document.getElementById('foundRow').innerHTML = '';
+  document.getElementById('current-word').textContent = '';
+  document.getElementById('msg').textContent = '';
+  document.getElementById('lineSvg').innerHTML = '';
+  updateHintUI();
+}
+
+function renderGrid() {
+  const g = document.getElementById('grid');
+  g.innerHTML = '';
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const el = document.createElement('div');
+      el.className = 'cell';
+      el.id = `c${r}_${c}`;
+      el.textContent = LAYOUT[r][c];
+      const st = cellStates[cellKey(r,c)];
+      if (st) el.classList.add(st);
+      g.appendChild(el);
+    }
+  }
+  bindPointerEvents();
+}
+
+// ── POINTER / TOUCH EVENTS ────────────────────────────────────────────────
+function bindPointerEvents() {
+  const wrap = document.getElementById('gridWrap');
+  // Remove old listeners by cloning
+  const fresh = wrap.cloneNode(true);
+  // Re-render cells into fresh — just re-attach on the existing wrap
+  wrap.onmousedown  = e => startDrag(e);
+  wrap.onmousemove  = e => { if (selecting) moveDrag(e); };
+  wrap.ontouchstart = e => { e.preventDefault(); startDrag(e); };
+  wrap.ontouchmove  = e => { e.preventDefault(); if (selecting) moveDrag(e); };
+  document.onmouseup  = () => { if (selecting) endDrag(); };
+  document.ontouchend = () => { if (selecting) endDrag(); };
+}
+
+function getXY(e) {
+  return e.touches ? [e.touches[0].clientX, e.touches[0].clientY]
+                   : [e.clientX, e.clientY];
+}
+
+function cellAt(x, y) {
+  const el = document.elementFromPoint(x, y);
+  if (!el || !el.classList.contains('cell')) return null;
+  const parts = el.id.replace('c','').split('_');
+  return [parseInt(parts[0]), parseInt(parts[1])];
+}
+
+function startDrag(e) {
+  const [x,y] = getXY(e);
+  const rc = cellAt(x,y);
+  if (!rc) return;
+  const [r,c] = rc;
+  if (cellStates[cellKey(r,c)]) return;
+  selecting = true;
+  currentPath = [[r,c]];
+  updateViz();
+}
+
+function moveDrag(e) {
+  const [x,y] = getXY(e);
+  const rc = cellAt(x,y);
+  if (!rc) return;
+  const [r,c] = rc;
+  if (cellStates[cellKey(r,c)]) return;
+
+  const existIdx = currentPath.findIndex(([pr,pc]) => pr===r && pc===c);
+  if (existIdx >= 0) {
+    // Backtrack
+    currentPath = currentPath.slice(0, existIdx + 1);
+  } else {
+    const [lr,lc] = currentPath[currentPath.length - 1];
+    if (Math.abs(lr-r) <= 1 && Math.abs(lc-c) <= 1) {
+      currentPath.push([r,c]);
+    }
+  }
+  updateViz();
+}
+
+function endDrag() {
+  selecting = false;
+  checkWord();
+}
+
+// ── VISUAL UPDATE ─────────────────────────────────────────────────────────
+function updateViz() {
+  document.querySelectorAll('.cell.selecting').forEach(el => el.classList.remove('selecting'));
+  currentPath.forEach(([r,c]) => {
+    const el = document.getElementById(`c${r}_${c}`);
+    if (el && !cellStates[cellKey(r,c)]) el.classList.add('selecting');
+  });
+
+  const letters = currentPath.map(([r,c]) => LAYOUT[r][c]).join('');
+  document.getElementById('current-word').textContent =
+    letters.length > 14 ? letters.slice(0,14) + '…' : letters;
+
+  drawConnectingLine(currentPath, 'var(--selecting)', 'temp');
+}
+
+function drawConnectingLine(path, color, id) {
+  const svg = document.getElementById('lineSvg');
+  // Remove previous line with same id
+  const old = svg.getElementById('line-' + id);
+  if (old) old.remove();
+  if (path.length < 2) return;
+
+  const svgRect = svg.getBoundingClientRect();
+  const points = path.map(([r,c]) => {
+    const cell = document.getElementById(`c${r}_${c}`);
+    if (!cell) return [0,0];
+    const rect = cell.getBoundingClientRect();
+    return [
+      rect.left - svgRect.left + rect.width / 2,
+      rect.top  - svgRect.top  + rect.height / 2,
+    ];
+  });
+
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.setAttribute('id', 'line-' + id);
+
+  // Thick rounded path
+  const d = points.map((p,i) => `${i===0?'M':'L'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+  const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  pathEl.setAttribute('d', d);
+  pathEl.setAttribute('stroke', color);
+  pathEl.setAttribute('stroke-width', '10');
+  pathEl.setAttribute('stroke-linecap', 'round');
+  pathEl.setAttribute('stroke-linejoin', 'round');
+  pathEl.setAttribute('fill', 'none');
+  pathEl.setAttribute('opacity', '0.4');
+  g.appendChild(pathEl);
+
+  svg.appendChild(g);
+}
+
+// ── WORD CHECK ────────────────────────────────────────────────────────────
+function checkWord() {
+  document.querySelectorAll('.cell.selecting').forEach(el => el.classList.remove('selecting'));
+  document.getElementById('current-word').textContent = '';
+  // Remove temp line
+  const svg = document.getElementById('lineSvg');
+  const tmp = svg.getElementById('line-temp');
+  if (tmp) tmp.remove();
+
+  if (currentPath.length < 3) { currentPath = []; return; }
+
+  // Match purely by cell set — direction doesn't matter
+  const drawn = new Set(currentPath.map(([r,c]) => cellKey(r,c)));
+
+  let matched = null;
+  for (const [word, path] of Object.entries(WORD_PATHS)) {
+    if (path.length !== currentPath.length) continue;
+    const target = new Set(path.map(([r,c]) => cellKey(r,c)));
+    if (target.size !== drawn.size) continue;
+    let ok = true;
+    for (const k of drawn) { if (!target.has(k)) { ok = false; break; } }
+    if (ok) { matched = word; break; }
+  }
+
+  if (matched && foundWords.includes(matched)) {
+    showMsg('Already found! ✨');
+    currentPath = []; return;
+  }
+
+  if (matched) {
+    // ✅ Correct!
+    foundWords.push(matched);
+    const type = WORD_TYPES[matched];
+    const cls  = type === 'spangram' ? 'found-spangram' : 'found-normal';
+    const lineColor = type === 'spangram' ? 'var(--spangram-dark)' : 'var(--found-blue-dark)';
+
+    // Freeze cells with colour
+    currentPath.forEach(([r,c]) => {
+      cellStates[cellKey(r,c)] = cls;
+      const el = document.getElementById(`c${r}_${c}`);
+      if (el) { el.classList.remove('selecting','hint-glow'); el.classList.add(cls); }
+    });
+
+    // Permanent line (use word as id)
+    drawConnectingLine(currentPath, lineColor, matched.replace(/\s/g,'_'));
+
+    // Pill in found row
+    const pill = document.createElement('div');
+    pill.className = `found-pill ${type}`;
+    pill.textContent = matched;
+    document.getElementById('foundRow').appendChild(pill);
+
+    showMsg(WORD_MSGS[matched]);
+    wrongStreak = 0;
+
+    if (foundWords.length === Object.keys(WORD_PATHS).length) {
+      setTimeout(() => document.getElementById('resultOverlay').classList.add('show'), 900);
+    }
+
+  } else {
+    // ❌ Wrong
+    wrongStreak++;
+    if (wrongStreak % 3 === 0) {
+      hints++;
+      updateHintUI();
+      showMsg('Not quite — but you earned a hint! 💡');
+    } else {
+      showMsg(`Not a word (${3 - (wrongStreak % 3)} more wrong = hint) 🌍`);
+    }
+    currentPath.forEach(([r,c]) => {
+      const el = document.getElementById(`c${r}_${c}`);
+      if (el) {
+        el.classList.add('wrong-shake');
+        setTimeout(() => el.classList.remove('wrong-shake'), 400);
+      }
+    });
+  }
+
+  currentPath = [];
+}
+
+// ── HINTS ─────────────────────────────────────────────────────────────────
+function useHint() {
+  if (hints <= 0) return;
+  hints--;
+  updateHintUI();
+
+  for (const [word, path] of Object.entries(WORD_PATHS)) {
+    if (foundWords.includes(word)) continue;
+    // Highlight the first cell of the word
+    const [r,c] = path[0];
+    const el = document.getElementById(`c${r}_${c}`);
+    if (el) {
+      el.classList.add('hint-glow');
+      setTimeout(() => el.classList.remove('hint-glow'), 4500);
+    }
+    showMsg('A cell is glowing — it belongs to an unfound word! 💡');
+    return;
+  }
+}
+
+function updateHintUI() {
+  const btn = document.getElementById('hintBtn');
+  const lbl = document.getElementById('hintCount');
+  btn.disabled = hints <= 0;
+  if (hints === 0) lbl.textContent = 'earn hints by making 3 wrong guesses';
+  else if (hints === 1) lbl.textContent = '1 hint available';
+  else lbl.textContent = `${hints} hints available`;
+}
+
+let msgTO;
+function showMsg(m) {
+  const el = document.getElementById('msg');
+  el.textContent = m;
+  clearTimeout(msgTO);
+  msgTO = setTimeout(() => el.textContent = '', 3500);
+}
+
+function resetGame() {
+  document.getElementById('resultOverlay').classList.remove('show');
+  document.getElementById('lineSvg').innerHTML = '';
+  init();
+}
+
+init();
+
+</script>
+</body>
+</html>

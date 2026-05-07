@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connections ♥ Stop 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fef9f0;--wood:#7a4a2a;--heart:#e8174a;--yellow:#ffd93d;
+  --c1:#f9df6d;--c2:#a0c35a;--c3:#b0c4ef;--c4:#ba81c5;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:'Nunito',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding-bottom:40px;}
+
+.top-bar{width:100%;max-width:600px;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:3px solid var(--wood);margin-bottom:10px;}
+.back-link{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--wood);text-decoration:none;}
+.game-title{font-family:'Press Start 2P',monospace;font-size:12px;color:var(--wood);}
+.stop-pill{font-family:'Press Start 2P',monospace;font-size:7px;background:var(--heart);color:white;padding:5px 10px;border-radius:12px;}
+
+.subtitle{font-family:'Press Start 2P',monospace;font-size:8px;color:#888;margin:4px 0 12px;text-align:center;}
+.instructions{max-width:560px;font-size:12px;color:#5a3a1a;background:#fff3e0;border:2px solid #ffcc80;border-radius:8px;padding:12px 16px;margin:0 16px 14px;line-height:1.7;text-align:center;}
+.instructions strong{color:var(--heart);}
+
+.mistakes-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-family:'Press Start 2P',monospace;font-size:8px;color:var(--wood);}
+.dot{width:14px;height:14px;border-radius:50%;background:var(--wood);transition:all .3s;}
+.dot.used{background:#ccc;}
+
+#solved-area{width:100%;max-width:560px;display:flex;flex-direction:column;gap:6px;padding:0 16px;margin-bottom:8px;}
+.solved-row{padding:14px;border-radius:6px;text-align:center;animation:slideIn .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes slideIn{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.solved-cat{font-family:'Press Start 2P',monospace;font-size:8px;color:rgba(0,0,0,0.6);margin-bottom:4px;text-transform:uppercase;}
+.solved-words{font-weight:800;font-size:13px;color:rgba(0,0,0,0.75);}
+
+#grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;max-width:560px;padding:0 16px;margin-bottom:14px;}
+.word-card{padding:12px 8px;background:white;border:2px solid #d4a070;border-radius:6px;text-align:center;font-weight:800;font-size:13px;color:var(--wood);cursor:pointer;transition:all .15s;user-select:none;min-height:56px;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 0 rgba(0,0,0,0.08);}
+.word-card:hover{transform:translateY(-2px);box-shadow:2px 4px 0 rgba(0,0,0,0.12);}
+.word-card.sel{background:var(--wood);color:var(--yellow);border-color:var(--wood);transform:scale(1.04);}
+.word-card.shake{animation:shake .4s ease;}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:0 16px;}
+.btn{font-family:'Press Start 2P',monospace;font-size:8px;padding:12px 20px;border-radius:6px;cursor:pointer;transition:all .1s;border:3px solid;}
+.btn-deselect{background:white;color:var(--wood);border-color:var(--wood);}
+.btn-deselect:hover{background:#f5e8d8;}
+.btn-submit{background:var(--heart);color:white;border-color:#a00;border-bottom:5px solid #a00;}
+.btn-submit:hover{transform:translateY(-2px);}
+.btn-submit:active{transform:translateY(1px);border-bottom-width:2px;}
+
+#msg{text-align:center;font-family:'Press Start 2P',monospace;font-size:8px;color:var(--heart);min-height:24px;padding:8px;line-height:1.8;}
+
+.result-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.result-overlay.show{display:flex;}
+.result-box{background:var(--bg);border:5px solid var(--wood);border-radius:4px;padding:28px 24px;max-width:400px;width:100%;text-align:center;box-shadow:0 0 0 2px var(--yellow),8px 8px 0 rgba(0,0,0,0.4);animation:popIn .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+.result-box .re{font-size:52px;display:block;margin-bottom:12px;}
+.result-box h2{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--wood);margin-bottom:12px;line-height:1.8;}
+.result-box p{font-size:13px;color:#5a3a1a;line-height:1.8;margin-bottom:20px;}
+.r-btn{display:inline-block;background:var(--heart);color:white;font-family:'Press Start 2P',monospace;font-size:9px;padding:14px 22px;border:none;border-radius:4px;cursor:pointer;text-decoration:none;box-shadow:3px 3px 0 #a00;transition:all .1s;margin:4px;}
+.r-btn:hover{transform:translateY(-2px);}
+.r-btn-sec{background:var(--wood);box-shadow:3px 3px 0 #3a1a00;}
+
+.result-close-btn{position:absolute;top:10px;right:14px;background:none;border:none;font-size:20px;cursor:pointer;color:#888;line-height:1;padding:4px;}
+.result-close-btn:hover{color:#333;}
+.result-box{position:relative;}
+.step-closer{font-family:'Press Start 2P',monospace;font-size:8px;color:#e8174a;background:#fff0f5;border:2px solid #ffb3cc;border-radius:8px;padding:10px 14px;margin-bottom:16px;line-height:1.8;}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="index.html" class="back-link">← MAP</a>
+  <div class="game-title">CONNECTIONS</div>
+  <div class="stop-pill">STOP 2</div>
+</div>
+
+<div class="subtitle">Create four groups of four!</div>
+
+<div class="instructions">
+  Find the hidden groups, <strong>Babes</strong>! Each group of 4 words shares a secret connection — but the theme won't be revealed until after you guess it. You have <strong>10 attempts</strong>. 🤔
+</div>
+
+<div class="mistakes-row">
+  Mistakes remaining:
+  <div class="dot" id="d0"></div>
+  <div class="dot" id="d1"></div>
+  <div class="dot" id="d2"></div>
+  <div class="dot" id="d3"></div>
+  <div class="dot" id="d4"></div>
+  <div class="dot" id="d5"></div>
+  <div class="dot" id="d6"></div>
+  <div class="dot" id="d7"></div>
+  <div class="dot" id="d8"></div>
+  <div class="dot" id="d9"></div>
+</div>
+
+<div id="msg"></div>
+<div id="solved-area"></div>
+<div id="grid"></div>
+<div class="btn-row">
+  <button class="btn btn-deselect" onclick="deselect()">Deselect All</button>
+  <button class="btn btn-submit" onclick="submitGuess()">Submit ♥</button>
+</div>
+
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-box"><button class="result-close-btn" onclick="closeResult()">✕</button>
+    <span class="re" id="rEmoji">🎉</span>
+    <h2 id="rTitle"></h2>
+    <div id="stepCloser" class="step-closer" style="display:none">🗺️ One step closer to your love letter — keep going!</div>
+    <p id="rMsg"></p>
+    <div id="winBtns" style="display:none;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px;">
+      <a href="index.html?done=2" class="r-btn">Back to Map →</a>
+      <button class="r-btn r-btn-secondary" onclick="closeResult()">Stay &amp; Look 👀</button>
+    </div>
+    <div id="loseBtns" style="display:none;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px;">
+      <button class="r-btn r-btn-secondary" onclick="resetGame()">Try Again</button>
+      <button class="r-btn" onclick="closeResult()">Keep Looking 👀</button>
+    </div></div>
+</div>
+<script>
+// Categories - themes hidden until solved
+const CATS = [
+  {
+    theme: "Shows We Love 📺",
+    color: '#f9df6d',
+    words: ['TED LASSO','ALCHEMY OF SOULS','KIM\'S CONVENIENCE','ALIEN RESIDENCE'],
+    msg: "Our favorite shows! 📺 You nailed it!"
+  },
+  {
+    theme: "When We Said 'I Love You' 💕",
+    color: '#a0c35a',
+    words: ['AIRBNB','BED','SEATTLE','INTERNSHIP'],
+    msg: "Remember that Airbnb in Seattle during your internship? 💕"
+  },
+  {
+    theme: "Our First Date 🍣",
+    color: '#b0c4ef',
+    words: ['SUSHI','COUCH','RAKU','SAKE SHOTS'],
+    msg: "Our first date was so fun 🍣 Sake shots and all!"
+  },
+  {
+    theme: "How We Met 👀",
+    color: '#ba81c5',
+    words: ['CONVERGENT','POOL','HUG','EYE CONTACT'],
+    msg: "That's how it all started 👀 Pool, eye contact, and the rest is history!"
+  }
+];
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+let allWords=[];
+let selected=[];
+let solved=[];
+let mistakes=0;
+const MAX_MISTAKES=10;
+let gameOver=false;
+
+function init(){
+  allWords=shuffle(CATS.flatMap((c,i)=>c.words.map(w=>({word:w,cat:i}))));
+  selected=[];solved=[];mistakes=0;gameOver=false;
+  renderDots();renderGrid();renderSolved();
+  document.getElementById('msg').textContent='';
+}
+
+function renderDots(){
+  for(let i=0;i<10;i++){
+    document.getElementById('d'+i).classList.toggle('used',i<mistakes);
+  }
+}
+
+function renderGrid(){
+  const g=document.getElementById('grid');
+  const remaining=allWords.filter(w=>!solved.flatMap(s=>CATS[s].words).includes(w.word));
+  g.innerHTML='';
+  remaining.forEach(item=>{
+    const card=document.createElement('div');
+    card.className='word-card'+(selected.includes(item.word)?' sel':'');
+    card.textContent=item.word;
+    card.onclick=()=>toggle(item.word,card);
+    g.appendChild(card);
+  });
+}
+
+function toggle(word,el){
+  if(gameOver)return;
+  if(selected.includes(word)){selected=selected.filter(w=>w!==word);el.classList.remove('sel');}
+  else{if(selected.length>=4){showMsg('Pick exactly 4 words!');return;}selected.push(word);el.classList.add('sel');}
+}
+
+function deselect(){selected=[];renderGrid();}
+
+function submitGuess(){
+  if(selected.length!==4){showMsg('Pick exactly 4 words!');return;}
+  if(gameOver)return;
+  let correct=-1;
+  for(let i=0;i<CATS.length;i++){
+    if(solved.includes(i))continue;
+    const cw=CATS[i].words;
+    if(selected.every(w=>cw.includes(w))&&cw.every(w=>selected.includes(w))){correct=i;break;}
+  }
+  if(correct>=0){
+    solved.push(correct);
+    showMsg(CATS[correct].msg);
+    selected=[];
+    renderSolved();renderGrid();
+    if(solved.length===4){gameOver=true;setTimeout(()=>showResult(true),600);}
+  } else {
+    mistakes++;
+    renderDots();
+    // One away?
+    let oneAway=false;
+    for(let i=0;i<CATS.length;i++){
+      if(solved.includes(i))continue;
+      const m=selected.filter(w=>CATS[i].words.includes(w)).length;
+      if(m===3){oneAway=true;break;}
+    }
+    showMsg(oneAway?'One away! 👀':'Not quite — try again! 💪');
+    document.querySelectorAll('.word-card.sel').forEach(c=>{c.classList.add('shake');setTimeout(()=>c.classList.remove('shake'),400);});
+    selected=[];renderGrid();
+    if(mistakes>=MAX_MISTAKES){gameOver=true;setTimeout(()=>showResult(false),600);}
+  }
+}
+
+function renderSolved(){
+  const el=document.getElementById('solved-area');
+  el.innerHTML='';
+  solved.forEach(i=>{
+    const row=document.createElement('div');
+    row.className='solved-row';
+    row.style.background=CATS[i].color;
+    row.innerHTML=`<div class="solved-cat">${CATS[i].theme}</div><div class="solved-words">${CATS[i].words.join(' · ')}</div>`;
+    el.appendChild(row);
+  });
+}
+
+let msgTO;
+function showMsg(m){
+  const el=document.getElementById('msg');
+  el.textContent=m;clearTimeout(msgTO);
+  msgTO=setTimeout(()=>el.textContent='',3000);
+}
+
+function showResult(won){
+  document.getElementById('rEmoji').textContent=won?'🎊':'😅';
+  document.getElementById('rTitle').textContent=won?'All Groups Found! 💕':'So Close!';
+  document.getElementById('rMsg').textContent=won?'You know every part of our story, Babes 🥹 All 4 groups down!':'So close! Keep trying — you know these 💪';
+  document.getElementById('stepCloser').style.display=won?'block':'none';
+  document.getElementById('winBtns').style.display=won?'flex':'none';
+  document.getElementById('loseBtns').style.display=won?'none':'flex';
+  document.getElementById('resultOverlay').classList.add('show');
+}
+
+function resetGame(){document.getElementById('resultOverlay').classList.remove('show');init();}
+
+init();
+
+</script>
+</body>
+</html>

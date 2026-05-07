@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connections ♥ Stop 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fdf6e3;
+    --wood: #8B5E3C;
+    --heart: #e91e63;
+    --yellow: #f9d71c;
+    --green: #5a9e32;
+    --blue: #1976d2;
+    --purple: #7b1fa2;
+    --c1: #f9d71c; /* How we met */
+    --c2: #7ec850; /* Places */
+    --c3: #64b5f6; /* Halloween */
+    --c4: #ba68c8; /* Shows */
+  }
+  * { margin:0;padding:0;box-sizing:border-box; }
+  body {
+    background: linear-gradient(135deg, #87ceeb 0%, #c8e6c9 50%, #7ec850 100%);
+    min-height: 100vh;
+    font-family: 'Nunito', sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px;
+  }
+  .game-header { text-align: center; margin-bottom: 16px; }
+  .back-btn {
+    display: inline-block;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: var(--wood);
+    text-decoration: none;
+    background: var(--bg);
+    border: 2px solid var(--wood);
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+  }
+  .stop-badge {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: white;
+    background: var(--heart);
+    padding: 6px 14px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 8px;
+    box-shadow: 2px 2px 0 #a00030;
+  }
+  h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(12px,3vw,20px);
+    color: var(--wood);
+    margin-bottom: 6px;
+  }
+  .hint {
+    font-size: 13px;
+    color: #5a3a1a;
+    background: rgba(255,255,255,0.7);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: inline-block;
+  }
+
+  .game-panel {
+    background: var(--bg);
+    border: 3px solid var(--wood);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 5px 5px 0 rgba(0,0,0,0.2);
+    width: 100%; max-width: 520px;
+  }
+
+  /* Lives */
+  .lives-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px; margin-bottom: 14px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: var(--wood);
+  }
+  .life { font-size: 16px; transition: all 0.3s; }
+  .life.lost { filter: grayscale(1); opacity: 0.3; }
+
+  /* Solved rows */
+  #solved { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+  .solved-row {
+    padding: 14px 16px;
+    border-radius: 10px;
+    text-align: center;
+    animation: slide-in 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.15);
+  }
+  @keyframes slide-in { from{transform:translateY(-20px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .solved-row .cat-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: rgba(0,0,0,0.7);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .solved-row .cat-words {
+    font-weight: 800;
+    font-size: 13px;
+    color: rgba(0,0,0,0.8);
+  }
+
+  /* Word grid */
+  #wordGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .word-card {
+    padding: 10px 6px;
+    background: white;
+    border: 2px solid #d4a574;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    color: #5a3a1a;
+    transition: all 0.15s;
+    user-select: none;
+    min-height: 50px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+  }
+  .word-card:hover { transform: translateY(-2px); box-shadow: 2px 4px 0 rgba(0,0,0,0.15); }
+  .word-card.selected {
+    background: #5a3a1a;
+    color: white;
+    border-color: #5a3a1a;
+    transform: scale(1.05);
+  }
+  .word-card.shake { animation: shake 0.4s ease; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-5px)} 40%{transform:translateX(5px)} 60%{transform:translateX(-3px)} 80%{transform:translateX(3px)} }
+  .word-card.correct-flash { animation: correct-flash 0.5s ease; }
+  @keyframes correct-flash { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2)} }
+
+  /* Buttons */
+  .btn-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    padding: 10px 16px;
+    border: 2px solid var(--wood);
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+    transition: all 0.1s;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary { background: var(--heart); color: white; border-color: #a00030; box-shadow: 2px 2px 0 #a00030; }
+  .btn-secondary { background: white; color: var(--wood); }
+
+  #message {
+    text-align: center;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    padding: 8px;
+    min-height: 28px;
+    color: var(--heart);
+    line-height: 1.8;
+  }
+
+  /* Result overlay */
+  .result-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:50; align-items:center; justify-content:center; padding:20px; }
+  .result-overlay.active { display:flex; }
+  .result-box {
+    background: var(--bg);
+    border: 4px solid var(--wood);
+    border-radius: 16px;
+    padding: 32px 24px;
+    text-align: center;
+    max-width: 360px;
+    box-shadow: 8px 8px 0 rgba(0,0,0,0.3);
+    animation: pop-in 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes pop-in { from{transform:scale(0.5);opacity:0} to{transform:scale(1);opacity:1} }
+  .result-box .emoji { font-size: 48px; margin-bottom: 12px; }
+  .result-box h2 { font-family:'Press Start 2P',monospace; font-size:11px; color:var(--wood); margin-bottom:12px; line-height:1.8; }
+  .result-box p { color:#5a3a1a; margin-bottom:20px; line-height:1.7; font-size:13px; }
+  .rbtn { display:inline-block; background:var(--heart); color:white; font-family:'Press Start 2P',monospace; font-size:8px; padding:12px 20px; border:none; border-radius:8px; cursor:pointer; box-shadow:3px 3px 0 #a00030; text-decoration:none; margin:4px; transition:all 0.1s; }
+  .rbtn:hover { transform:translateY(-2px); }
+  .rbtn-wood { background:var(--wood); box-shadow:3px 3px 0 #3a2010; }
+</style>
+</head>
+<body>
+
+<div class="game-header">
+  <a href="index.html" class="back-btn">← Back to Map</a><br>
+  <span class="stop-badge">🔗 Stop 2 of 5</span>
+  <h1>CONNECTIONS ♥</h1>
+  <div class="hint">Sort 16 words into 4 groups — all about us! 🗺️</div>
+</div>
+
+<div class="game-panel">
+  <div class="lives-row">
+    <span>Mistakes:</span>
+    <span class="life" id="l1">💚</span>
+    <span class="life" id="l2">💚</span>
+    <span class="life" id="l3">💚</span>
+    <span class="life" id="l4">💚</span>
+  </div>
+  <div id="message"></div>
+  <div id="solved"></div>
+  <div id="wordGrid"></div>
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="deselect()">Deselect All</button>
+    <button class="btn btn-primary" onclick="submitGuess()">Submit ♥</button>
+  </div>
+</div>
+
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-box">
+    <div class="emoji" id="resultEmoji">🎉</div>
+    <h2 id="resultTitle">Amazing!</h2>
+    <p id="resultMsg">You know us so well!</p>
+    <a href="index.html?completed=2" class="rbtn" id="continueBtn">Next Stop →</a>
+    <button class="rbtn rbtn-wood" onclick="resetGame()">Try Again</button>
+  </div>
+</div>
+
+<script>
+const CATEGORIES = [
+  {
+    title: "How We Met 💘",
+    color: "#f9d71c",
+    words: ["CONVERGENT", "POOL", "EYE CONTACT", "HUG"],
+    message: "That's how our story started! 💘"
+  },
+  {
+    title: "Places We've Traveled 🌍",
+    color: "#7ec850",
+    words: ["JAPAN", "CANCUN", "MALIBU", "CHICAGO"],
+    message: "So many adventures together! ✈️"
+  },
+  {
+    title: "Halloween Costumes 🎃",
+    color: "#64b5f6",
+    words: ["VAMPIRE", "WEREWOLF", "CATWOMAN", "LUIGI"],
+    message: "We really commit to the costumes 🎃"
+  },
+  {
+    title: "Shows We've Loved 📺",
+    color: "#ba68c8",
+    words: ["ALIEN RESIDENT", "TED LASSO", "ALCHEMY OF SOULS", "KIM'S CONVENIENCE"],
+    message: "Our watch list is elite 📺"
+  }
+];
+
+let allWords = [];
+let selected = [];
+let mistakes = 0;
+let solved = [];
+let gameOver = false;
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function init() {
+  allWords = shuffle(CATEGORIES.flatMap(c => c.words.map(w => ({ word: w, cat: CATEGORIES.indexOf(c) }))));
+  selected = [];
+  mistakes = 0;
+  solved = [];
+  gameOver = false;
+  renderGrid();
+  renderSolved();
+  updateLives();
+  document.getElementById('message').textContent = '';
+}
+
+function renderGrid() {
+  const grid = document.getElementById('wordGrid');
+  const remaining = allWords.filter(w => !solved.flatMap(s => CATEGORIES[s].words).includes(w.word));
+  grid.innerHTML = '';
+  remaining.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'word-card' + (selected.includes(item.word) ? ' selected' : '');
+    card.textContent = item.word;
+    card.onclick = () => toggleSelect(item.word, card);
+    grid.appendChild(card);
+  });
+}
+
+function toggleSelect(word, el) {
+  if (gameOver) return;
+  if (selected.includes(word)) {
+    selected = selected.filter(w => w !== word);
+    el.classList.remove('selected');
+  } else {
+    if (selected.length >= 4) { showMessage('Pick exactly 4!'); return; }
+    selected.push(word);
+    el.classList.add('selected');
+  }
+}
+
+function deselect() {
+  selected = [];
+  renderGrid();
+}
+
+function submitGuess() {
+  if (selected.length !== 4) { showMessage('Pick exactly 4 words!'); return; }
+  if (gameOver) return;
+
+  // Check which category
+  let correctCat = -1;
+  for (let i = 0; i < CATEGORIES.length; i++) {
+    if (solved.includes(i)) continue;
+    const catWords = CATEGORIES[i].words;
+    if (selected.every(w => catWords.includes(w)) && catWords.every(w => selected.includes(w))) {
+      correctCat = i;
+      break;
+    }
+  }
+
+  if (correctCat >= 0) {
+    // Correct!
+    solved.push(correctCat);
+    showMessage(CATEGORIES[correctCat].message);
+    selected = [];
+    renderSolved();
+    renderGrid();
+
+    if (solved.length === 4) {
+      gameOver = true;
+      setTimeout(() => showResult(true), 600);
+    }
+  } else {
+    // Wrong
+    mistakes++;
+    updateLives();
+    showMessage(mistakes >= 4 ? 'No more guesses! 😢' : 'Not quite! Keep trying 💪');
+
+    // Shake selected cards
+    document.querySelectorAll('.word-card.selected').forEach(el => {
+      el.classList.add('shake');
+      setTimeout(() => el.classList.remove('shake'), 400);
+    });
+
+    // Check if one away
+    let oneAway = false;
+    for (let i = 0; i < CATEGORIES.length; i++) {
+      if (solved.includes(i)) continue;
+      const catWords = CATEGORIES[i].words;
+      const matches = selected.filter(w => catWords.includes(w)).length;
+      if (matches === 3) { oneAway = true; break; }
+    }
+    if (oneAway) setTimeout(() => showMessage('One away! 👀'), 600);
+
+    selected = [];
+    renderGrid();
+
+    if (mistakes >= 4) {
+      gameOver = true;
+      setTimeout(() => showResult(false), 800);
+    }
+  }
+}
+
+function renderSolved() {
+  const el = document.getElementById('solved');
+  el.innerHTML = '';
+  solved.forEach(catIdx => {
+    const cat = CATEGORIES[catIdx];
+    const row = document.createElement('div');
+    row.className = 'solved-row';
+    row.style.background = cat.color;
+    row.innerHTML = `<div class="cat-title">${cat.title}</div><div class="cat-words">${cat.words.join(' · ')}</div>`;
+    el.appendChild(row);
+  });
+}
+
+function updateLives() {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('l' + i);
+    if (i <= mistakes) { el.classList.add('lost'); el.textContent = '🖤'; }
+    else { el.classList.remove('lost'); el.textContent = '💚'; }
+  }
+}
+
+let msgTO;
+function showMessage(msg) {
+  const el = document.getElementById('message');
+  el.textContent = msg;
+  clearTimeout(msgTO);
+  msgTO = setTimeout(() => { el.textContent = ''; }, 2500);
+}
+
+function showResult(won) {
+  const overlay = document.getElementById('resultOverlay');
+  document.getElementById('resultEmoji').textContent = won ? '🎉' : '😅';
+  document.getElementById('resultTitle').textContent = won ? 'Perfect Score! ♥' : 'Nice Try!';
+  document.getElementById('resultMsg').textContent = won
+    ? 'You know everything about us! 4 years of memories and you got them all! 💕'
+    : `You got ${solved.length}/4 groups! Our memories are locked in your heart 💕 Keep going!`;
+  overlay.classList.add('active');
+}
+
+function resetGame() {
+  document.getElementById('resultOverlay').classList.remove('active');
+  init();
+}
+
+init();
+</script>
+</body>
+</html>

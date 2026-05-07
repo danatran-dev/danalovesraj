@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slither ♥ Stop 5</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a1628;--heart:#e8174a;--yellow:#ffd93d;--wood:#7a4a2a;--cream:#fef9f0;--green:#4caf50;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:white;font-family:'Nunito',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow:hidden;}
+
+.top-bar{width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:2px solid #1a2a4a;flex-shrink:0;}
+.back-link{font-family:'Press Start 2P',monospace;font-size:7px;color:#888;text-decoration:none;}
+.back-link:hover{color:white;}
+.game-title{font-family:'Press Start 2P',monospace;font-size:11px;color:white;}
+.stop-pill{font-family:'Press Start 2P',monospace;font-size:7px;background:var(--heart);color:white;padding:5px 10px;border-radius:12px;}
+
+.game-wrapper{position:relative;flex:1;width:100%;display:flex;flex-direction:column;align-items:center;}
+
+/* Leaderboard */
+.leaderboard{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.8);border:2px solid #1a3a6a;border-radius:8px;padding:10px 14px;z-index:20;min-width:160px;}
+.lb-title{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--yellow);margin-bottom:8px;text-align:center;}
+.lb-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:12px;}
+.lb-rank{font-family:'Press Start 2P',monospace;font-size:8px;min-width:20px;}
+.lb-rank.gold{color:var(--yellow);}
+.lb-rank.silver{color:#ccc;}
+.lb-name{flex:1;font-weight:700;}
+.lb-score{font-family:'Press Start 2P',monospace;font-size:8px;color:#aaa;}
+
+/* HUD */
+.hud-top{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.7);border:2px solid #1a3a6a;border-radius:8px;padding:8px 12px;z-index:20;}
+.hud-score{font-family:'Press Start 2P',monospace;font-size:10px;color:var(--yellow);}
+.hud-label{font-family:'Press Start 2P',monospace;font-size:6px;color:#888;margin-bottom:2px;}
+
+/* Controls hint */
+.controls-hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);border:1px solid #333;border-radius:6px;padding:6px 14px;font-family:'Press Start 2P',monospace;font-size:7px;color:#888;z-index:20;text-align:center;white-space:nowrap;}
+
+canvas{display:block;cursor:none;}
+
+/* Start/Result overlays */
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,.85);z-index:50;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:20px;}
+.overlay.hidden{display:none;}
+.overlay-box{background:var(--cream);border:5px solid var(--wood);border-radius:4px;padding:28px 24px;max-width:420px;width:100%;text-align:center;box-shadow:0 0 0 2px var(--yellow),8px 8px 0 rgba(0,0,0,.5);animation:popIn .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+.overlay-box h2{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--wood);margin-bottom:12px;line-height:1.8;}
+.overlay-box p{font-size:13px;color:#5a3a1a;line-height:1.8;margin-bottom:20px;}
+.overlay-box .re{font-size:52px;display:block;margin-bottom:12px;}
+.o-btn{display:inline-block;background:var(--heart);color:white;font-family:'Press Start 2P',monospace;font-size:9px;padding:14px 22px;border:none;border-radius:4px;cursor:pointer;text-decoration:none;box-shadow:3px 3px 0 #a00;transition:all .1s;margin:4px;}
+.o-btn:hover{transform:translateY(-2px);}
+.o-btn-sec{background:var(--wood);box-shadow:3px 3px 0 #3a1a00;}
+
+/* Mobile controls */
+.mobile-dpad{position:absolute;bottom:20px;right:16px;display:none;flex-direction:column;align-items:center;gap:4px;z-index:30;}
+.dpad-row{display:flex;gap:4px;}
+.dpad-btn{width:48px;height:48px;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.4);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;}
+.dpad-btn:active{background:rgba(255,255,255,.4);}
+@media(max-width:600px){.mobile-dpad{display:flex;}}
+
+.result-close-btn{position:absolute;top:10px;right:14px;background:none;border:none;font-size:20px;cursor:pointer;color:#888;line-height:1;padding:4px;}
+.result-close-btn:hover{color:#333;}
+.result-box{position:relative;}
+.step-closer{font-family:'Press Start 2P',monospace;font-size:8px;color:#e8174a;background:#fff0f5;border:2px solid #ffb3cc;border-radius:8px;padding:10px 14px;margin-bottom:16px;line-height:1.8;}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="index.html" class="back-link">← MAP</a>
+  <div class="game-title">SLITHER ♥</div>
+  <div class="stop-pill">STOP 5</div>
+</div>
+
+<div class="game-wrapper" id="gameWrapper">
+  <div class="hud-top">
+    <div class="hud-label">BABES' SCORE</div>
+    <div class="hud-score" id="hudScore">0</div>
+  </div>
+
+  <div class="leaderboard" id="leaderboard">
+    <div class="lb-title">🏆 LEADERBOARD</div>
+    <div class="lb-row"><span class="lb-rank gold">#1</span><span class="lb-name">your amazing gf</span><span class="lb-score" id="gfScore">999</span></div>
+    <div class="lb-row"><span class="lb-rank silver">#2</span><span class="lb-name" style="color:#ffd93d">BABES</span><span class="lb-score" id="babScore">0</span></div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <div class="controls-hint">Arrow Keys / WASD to move • Eat 💕 to grow • Catch your gf to win!</div>
+
+  <div class="mobile-dpad">
+    <div class="dpad-row"><div class="dpad-btn" ontouchstart="setDir(0,-1)">⬆️</div></div>
+    <div class="dpad-row">
+      <div class="dpad-btn" ontouchstart="setDir(-1,0)">⬅️</div>
+      <div class="dpad-btn" ontouchstart="setDir(0,1)">⬇️</div>
+      <div class="dpad-btn" ontouchstart="setDir(1,0)">➡️</div>
+    </div>
+  </div>
+
+  <!-- Start overlay -->
+  <div class="overlay" id="startOverlay">
+    <div class="overlay-box">
+      <span class="re">🐍</span>
+      <h2>SLITHER!</h2>
+      <p>You're <strong style="color:#8B4513">Babes</strong> — a brown snake with your face! 🐍<br><br>
+      Eat the <strong style="color:var(--heart)">💕 dots</strong> (my face!) to grow bigger.<br><br>
+      Chase down <strong style="color:#ffd700">Your Love</strong> (the yellow snake) and catch her to win — but watch out, she's fast! 😈<br><br>
+      <em style="color:#888">Note: Your amazing gf is always #1 on the leaderboard... just saying 😇</em></p>
+      <button class="o-btn" onclick="startGame()">▶ LET'S GO!</button>
+    </div>
+  </div>
+
+  <!-- Result overlay -->
+  <div class="overlay hidden" id="resultOverlay">
+    <div class="overlay-box">
+      <span class="re" id="rEmoji">🎉</span>
+      <h2 id="rTitle">You Won!</h2>
+      <p id="rMsg">Amazing!</p>
+      <a href="index.html?done=5" class="o-btn">Back to Map →</a>
+      <button class="o-btn o-btn-sec" onclick="resetGame()">Play Again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+const wrapper=document.getElementById('gameWrapper');
+
+let W,H,CELL;
+function resize(){
+  const rect=wrapper.getBoundingClientRect();
+  W=rect.width; H=rect.height;
+  canvas.width=W; canvas.height=H;
+  CELL=Math.max(16,Math.min(24,Math.floor(Math.min(W,H)/24)));
+}
+resize();
+window.addEventListener('resize',()=>{resize();});
+
+// Game state
+let player,gf,dots,gameRunning,gameOver,score,gfScore,animFrame,tickCount;
+let dir={x:1,y:0}, nextDir={x:1,y:0};
+
+const COLS=()=>Math.floor(W/CELL);
+const ROWS=()=>Math.floor(H/CELL);
+
+function randPos(avoid=[]){
+  let pos,attempts=0;
+  do{
+    pos={x:Math.floor(Math.random()*COLS()),y:Math.floor(Math.random()*ROWS())};
+    attempts++;
+  }while(attempts<100&&avoid.some(a=>a.x===pos.x&&a.y===pos.y));
+  return pos;
+}
+
+function initGame(){
+  const cx=Math.floor(COLS()/2), cy=Math.floor(ROWS()/2);
+  player=[{x:cx,y:cy},{x:cx-1,y:cy},{x:cx-2,y:cy}];
+  gf=[{x:cx+8,y:cy+4},{x:cx+9,y:cy+4},{x:cx+10,y:cy+4}];
+  dir={x:1,y:0}; nextDir={x:1,y:0};
+  score=0; gfScore=999; tickCount=0;
+  dots=[];
+  for(let i=0;i<18;i++) spawnDot();
+}
+
+function spawnDot(){
+  const all=[...player,...gf,...dots];
+  dots.push(randPos(all));
+}
+
+function setDir(dx,dy){
+  if(dx===0&&dy===0)return;
+  if(dx!==-dir.x&&dy!==-dir.y) nextDir={x:dx,y:dy};
+}
+
+let lastTick=0;
+const TICK_SPEED=140; // ms per tick
+
+function gameLoop(ts){
+  if(!gameRunning)return;
+  animFrame=requestAnimationFrame(gameLoop);
+  if(ts-lastTick>TICK_SPEED){
+    lastTick=ts; tickCount++;
+    update();
+  }
+  draw();
+}
+
+function update(){
+  dir=nextDir;
+  // Move player
+  const head={x:player[0].x+dir.x, y:player[0].y+dir.y};
+  // Wrap
+  head.x=(head.x+COLS())%COLS();
+  head.y=(head.y+ROWS())%ROWS();
+  // Check self collision
+  if(player.some(s=>s.x===head.x&&s.y===head.y)){
+    endGame(false,'ouch'); return;
+  }
+  player.unshift(head);
+  // Eat dot?
+  const dotIdx=dots.findIndex(d=>d.x===head.x&&d.y===head.y);
+  if(dotIdx>=0){
+    dots.splice(dotIdx,1);
+    score+=10;
+    document.getElementById('hudScore').textContent=score;
+    document.getElementById('babScore').textContent=score;
+    spawnDot();
+  } else {
+    player.pop();
+  }
+  // Check collision with gf snake
+  if(gf.some(s=>s.x===head.x&&s.y===head.y)){
+    endGame(true,'caught'); return;
+  }
+
+  // Move GF snake (AI - tries to avoid player but wanders)
+  moveGF();
+
+  // Update leaderboard — gf always stays ahead
+  if(score>=gfScore-10) gfScore=score+Math.floor(Math.random()*20)+15;
+  document.getElementById('gfScore').textContent=gfScore;
+}
+
+let gfDir={x:-1,y:0};
+function moveGF(){
+  // Simple AI: mostly random, occasionally chases dots
+  if(Math.random()<0.25){
+    // Pick random direction avoiding reverse
+    const dirs=[{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
+    const valid=dirs.filter(d=>d.x!==(-gfDir.x)||d.y!==(-gfDir.y));
+    gfDir=valid[Math.floor(Math.random()*valid.length)];
+  }
+  const head={x:(gf[0].x+gfDir.x+COLS())%COLS(), y:(gf[0].y+gfDir.y+ROWS())%ROWS()};
+  // Avoid self
+  if(gf.some((s,i)=>i>0&&s.x===head.x&&s.y===head.y)){
+    const dirs=[{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
+    const valid=dirs.filter(d=>d.x!==(-gfDir.x)||d.y!==(-gfDir.y));
+    gfDir=valid[Math.floor(Math.random()*valid.length)];
+    head.x=(gf[0].x+gfDir.x+COLS())%COLS();
+    head.y=(gf[0].y+gfDir.y+ROWS())%ROWS();
+  }
+  gf.unshift(head);
+  // GF eats dots too
+  const di=dots.findIndex(d=>d.x===head.x&&d.y===head.y);
+  if(di>=0){dots.splice(di,1);spawnDot();}
+  else gf.pop();
+}
+
+function draw(){
+  // Background grid
+  ctx.fillStyle='#0a1628';
+  ctx.fillRect(0,0,W,H);
+  // Grid dots
+  ctx.fillStyle='rgba(255,255,255,.03)';
+  for(let x=0;x<COLS();x++)for(let y=0;y<ROWS();y++){
+    ctx.fillRect(x*CELL+CELL/2-1,y*CELL+CELL/2-1,2,2);
+  }
+
+  // Draw dots (💕 food)
+  dots.forEach(d=>{
+    ctx.font=`${CELL-2}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('💕',d.x*CELL+CELL/2,d.y*CELL+CELL/2);
+  });
+
+  // Draw GF snake (yellow)
+  gf.forEach((seg,i)=>{
+    const x=seg.x*CELL, y=seg.y*CELL;
+    if(i===0){
+      // Head with face
+      ctx.fillStyle='#ffd700';
+      ctx.beginPath(); ctx.roundRect(x+1,y+1,CELL-2,CELL-2,4); ctx.fill();
+      // Face
+      ctx.font=`${CELL-4}px serif`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('😄',x+CELL/2,y+CELL/2);
+    } else {
+      ctx.fillStyle=i%2===0?'#e6b800':'#ffd700';
+      ctx.beginPath(); ctx.roundRect(x+2,y+2,CELL-4,CELL-4,3); ctx.fill();
+    }
+  });
+
+  // Draw player snake (brown)
+  player.forEach((seg,i)=>{
+    const x=seg.x*CELL, y=seg.y*CELL;
+    if(i===0){
+      ctx.fillStyle='#8B4513';
+      ctx.beginPath(); ctx.roundRect(x+1,y+1,CELL-2,CELL-2,4); ctx.fill();
+      ctx.font=`${CELL-4}px serif`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('😎',x+CELL/2,y+CELL/2);
+    } else {
+      ctx.fillStyle=i%2===0?'#6B3410':'#8B4513';
+      ctx.beginPath(); ctx.roundRect(x+2,y+2,CELL-4,CELL-4,3); ctx.fill();
+    }
+  });
+}
+
+function endGame(won, reason){
+  gameRunning=false;
+  cancelAnimationFrame(animFrame);
+  const overlay=document.getElementById('resultOverlay');
+  document.getElementById('rEmoji').textContent=won?'🎉':'😅';
+
+  if(won){
+    document.getElementById('rTitle').textContent='You Caught Her! 💕';
+    document.getElementById('rMsg').textContent=`Score: ${score} points! You finally caught up to Your Love 😍 In life and in the game! But she's still #1 on the leaderboard... 😇`;
+  } else {
+    document.getElementById('rTitle').textContent='Oops! 😵';
+    document.getElementById('rMsg').textContent=`You crashed! Score: ${score} 😅 Try again — you can do it, Babes!`;
+  }
+  overlay.classList.remove('hidden');
+  if(won) setTimeout(()=>{/* show continue */},500);
+}
+
+function startGame(){
+  document.getElementById('startOverlay').classList.add('hidden');
+  initGame();
+  gameRunning=true;
+  requestAnimationFrame(gameLoop);
+}
+
+function resetGame(){
+  document.getElementById('resultOverlay').classList.add('hidden');
+  document.getElementById('startOverlay').classList.remove('hidden');
+}
+
+// Keys
+document.addEventListener('keydown',e=>{
+  switch(e.key){
+    case 'ArrowUp':case 'w':case 'W': setDir(0,-1); e.preventDefault(); break;
+    case 'ArrowDown':case 's':case 'S': setDir(0,1); e.preventDefault(); break;
+    case 'ArrowLeft':case 'a':case 'A': setDir(-1,0); e.preventDefault(); break;
+    case 'ArrowRight':case 'd':case 'D': setDir(1,0); e.preventDefault(); break;
+  }
+});
+
+// Touch swipe
+let tx=null,ty=null;
+canvas.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+canvas.addEventListener('touchend',e=>{
+  if(tx===null)return;
+  const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+  if(Math.abs(dx)>Math.abs(dy)) setDir(dx>0?1:-1,0);
+  else setDir(0,dy>0?1:-1);
+  tx=null;ty=null;
+});
+
+draw();
+
+</script>
+</body>
+</html>

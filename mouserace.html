@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mouse Race ♥ Stop 5</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#fdf6e3; --wood:#8B5E3C; --heart:#e91e63;
+    --track:#d4a574; --wall:#5a3a1a; --grass:#7ec850;
+  }
+  * { margin:0;padding:0;box-sizing:border-box; }
+  body {
+    background:linear-gradient(135deg,#87ceeb 0%,#c8e6c9 50%,#7ec850 100%);
+    min-height:100vh; font-family:'Nunito',sans-serif;
+    display:flex; flex-direction:column; align-items:center; padding:20px;
+  }
+  .game-header { text-align:center; margin-bottom:14px; }
+  .back-btn { display:inline-block; font-family:'Press Start 2P',monospace; font-size:7px; color:var(--wood); text-decoration:none; background:var(--bg); border:2px solid var(--wood); padding:6px 12px; border-radius:6px; margin-bottom:10px; box-shadow:2px 2px 0 rgba(0,0,0,0.2); }
+  .stop-badge { font-family:'Press Start 2P',monospace; font-size:9px; color:white; background:var(--heart); padding:6px 14px; border-radius:20px; display:inline-block; margin-bottom:8px; box-shadow:2px 2px 0 #a00030; }
+  h1 { font-family:'Press Start 2P',monospace; font-size:clamp(12px,3vw,20px); color:var(--wood); margin-bottom:6px; }
+  .hint { font-size:13px; color:#5a3a1a; background:rgba(255,255,255,0.7); padding:8px 16px; border-radius:20px; font-weight:700; display:inline-block; }
+
+  .game-panel {
+    background:var(--bg); border:3px solid var(--wood); border-radius:16px; padding:20px;
+    box-shadow:5px 5px 0 rgba(0,0,0,0.2); width:100%; max-width:520px;
+  }
+
+  .stats-row {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:12px;
+    font-family:'Press Start 2P',monospace; font-size:8px; color:var(--wood);
+  }
+  .stat { background:white; border:2px solid var(--wood); border-radius:8px; padding:6px 12px; }
+
+  /* Level select */
+  .level-btn-row { display:flex; gap:8px; justify-content:center; margin-bottom:12px; }
+  .level-btn {
+    font-family:'Press Start 2P',monospace; font-size:7px;
+    padding:8px 12px; border:2px solid var(--wood); border-radius:8px;
+    cursor:pointer; background:white; color:var(--wood);
+    box-shadow:2px 2px 0 rgba(0,0,0,0.2); transition:all 0.1s;
+  }
+  .level-btn:hover { transform:translateY(-1px); }
+  .level-btn.active { background:var(--heart); color:white; border-color:#a00030; }
+
+  /* Race track canvas */
+  #raceCanvas {
+    width:100%; border:3px solid var(--wall); border-radius:10px;
+    cursor:none; display:block;
+    box-shadow:3px 3px 0 rgba(0,0,0,0.2);
+    touch-action:none;
+  }
+
+  /* Progress bar */
+  .progress-bar-outer { background:rgba(0,0,0,0.2); border-radius:10px; height:14px; border:2px solid var(--wood); overflow:hidden; margin-bottom:10px; }
+  .progress-bar-inner { height:100%; background:linear-gradient(90deg,var(--heart),#ff6a00); border-radius:8px; transition:width 0.1s; }
+
+  #message { text-align:center; font-family:'Press Start 2P',monospace; font-size:8px; color:var(--heart); min-height:20px; line-height:1.8; margin-top:8px; }
+
+  /* Big start overlay on canvas */
+  .start-overlay {
+    position:absolute; inset:0;
+    background:rgba(253,246,227,0.95);
+    border-radius:8px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:12px;
+    pointer-events:none;
+  }
+  .start-overlay h2 { font-family:'Press Start 2P',monospace; font-size:12px; color:var(--wood); text-align:center; line-height:1.8; }
+  .start-overlay p { font-size:13px; color:#5a3a1a; text-align:center; max-width:280px; line-height:1.6; }
+
+  .canvas-wrapper { position:relative; }
+
+  /* Result overlay */
+  .result-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:50; align-items:center; justify-content:center; padding:20px; }
+  .result-overlay.active { display:flex; }
+  .result-box { background:var(--bg); border:4px solid var(--wood); border-radius:16px; padding:32px 24px; text-align:center; max-width:360px; box-shadow:8px 8px 0 rgba(0,0,0,0.3); animation:pop-in 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes pop-in { from{transform:scale(0.5);opacity:0} to{transform:scale(1);opacity:1} }
+  .result-box .emoji { font-size:48px; margin-bottom:12px; }
+  .result-box h2 { font-family:'Press Start 2P',monospace; font-size:10px; color:var(--wood); margin-bottom:12px; line-height:1.8; }
+  .result-box p { color:#5a3a1a; margin-bottom:20px; line-height:1.7; font-size:13px; }
+  .rbtn { display:inline-block; background:var(--heart); color:white; font-family:'Press Start 2P',monospace; font-size:8px; padding:12px 20px; border:none; border-radius:8px; cursor:pointer; box-shadow:3px 3px 0 #a00030; text-decoration:none; margin:4px; transition:all 0.1s; }
+  .rbtn:hover { transform:translateY(-2px); }
+  .rbtn-wood { background:var(--wood); box-shadow:3px 3px 0 #3a2010; }
+
+  .btn { font-family:'Press Start 2P',monospace; font-size:8px; padding:10px 18px; background:var(--heart); color:white; border:none; border-radius:8px; cursor:pointer; box-shadow:3px 3px 0 #a00030; margin-top:8px; transition:all 0.1s; display:inline-block; }
+  .btn:hover { transform:translateY(-2px); }
+</style>
+</head>
+<body>
+
+<div class="game-header">
+  <a href="index.html" class="back-btn">← Back to Map</a><br>
+  <span class="stop-badge">🏁 Stop 5 of 5</span>
+  <h1>MOUSE RACE ♥</h1>
+  <div class="hint">Guide your mouse through the track without crashing! 🐭</div>
+</div>
+
+<div class="game-panel">
+  <div class="stats-row">
+    <div class="stat">Level: <span id="levelDisplay">1</span></div>
+    <div class="stat">Best: <span id="bestTime">--</span></div>
+    <div class="stat">⏱ <span id="timer">0.0s</span></div>
+  </div>
+  <div class="level-btn-row">
+    <button class="level-btn active" onclick="setLevel(1)">Easy 🌸</button>
+    <button class="level-btn" onclick="setLevel(2)">Medium 🌻</button>
+    <button class="level-btn" onclick="setLevel(3)">Hard 🔥</button>
+  </div>
+  <div class="progress-bar-outer">
+    <div class="progress-bar-inner" id="progressBar" style="width:0%"></div>
+  </div>
+  <div class="canvas-wrapper">
+    <canvas id="raceCanvas" width="480" height="320"></canvas>
+    <div class="start-overlay" id="startOverlay">
+      <h2>🐭 Mouse Race!</h2>
+      <p>Move your mouse cursor through the track from START to FINISH without touching the walls. Don't crash!</p>
+      <button class="btn" onclick="startGame()">Start Racing! 🏁</button>
+    </div>
+  </div>
+  <div id="message"></div>
+</div>
+
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-box">
+    <div class="emoji" id="resultEmoji">🏆</div>
+    <h2 id="resultTitle">You Did It!</h2>
+    <p id="resultMsg">Amazing racing!</p>
+    <a href="index.html?completed=5" class="rbtn" id="continueBtn">Final Stop →</a>
+    <button class="rbtn rbtn-wood" onclick="resetGame()">Race Again</button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('raceCanvas');
+const ctx = canvas.getContext('2d');
+const W = 480, H = 320;
+
+let level = 1;
+let gameState = 'idle'; // idle, playing, crashed, won
+let mouseX = 0, mouseY = 0;
+let startTime = 0;
+let elapsed = 0;
+let timerInterval;
+let progress = 0;
+let bestTimes = {};
+let trackWidth;
+
+// Track waypoints for the winding path - defined as center line + width
+function getTrack(lvl) {
+  const widths = {1: 60, 2: 44, 3: 32};
+  trackWidth = widths[lvl];
+
+  // Waypoints: [x, y] as percentages of canvas
+  return [
+    [0.04, 0.5],   // Start (left middle)
+    [0.15, 0.5],
+    [0.22, 0.2],
+    [0.35, 0.2],
+    [0.45, 0.5],
+    [0.55, 0.8],
+    [0.68, 0.8],
+    [0.75, 0.5],
+    [0.85, 0.3],
+    [0.96, 0.3],   // Finish (right)
+  ].map(([px, py]) => [px * W, py * H]);
+}
+
+let waypoints = [];
+let trackPath = null; // CanvasPath for collision
+
+function buildTrackPath(pts, width) {
+  // Build outer polygon from waypoints
+  // Use Path2D with two offset paths
+  const left = [], right = [];
+
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    let dx, dy;
+    if (i === 0) { dx = pts[1][0]-pts[0][0]; dy = pts[1][1]-pts[0][1]; }
+    else if (i === pts.length-1) { dx = pts[i][0]-pts[i-1][0]; dy = pts[i][1]-pts[i-1][1]; }
+    else { dx = pts[i+1][0]-pts[i-1][0]; dy = pts[i+1][1]-pts[i-1][1]; }
+    const len = Math.sqrt(dx*dx+dy*dy);
+    const nx = -dy/len, ny = dx/len;
+    left.push([p[0]+nx*width/2, p[1]+ny*width/2]);
+    right.push([p[0]-nx*width/2, p[1]-ny*width/2]);
+  }
+
+  return {left, right};
+}
+
+function drawTrack() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Grass background
+  const grassGrad = ctx.createLinearGradient(0,0,0,H);
+  grassGrad.addColorStop(0,'#7ec850');
+  grassGrad.addColorStop(1,'#5a9e32');
+  ctx.fillStyle = grassGrad;
+  ctx.fillRect(0,0,W,H);
+
+  // Draw decorative grass dots
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  for (let i=0;i<30;i++) {
+    ctx.beginPath();
+    ctx.arc((i*73)%W, (i*41+20)%H, 2, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  const {left, right} = buildTrackPath(waypoints, trackWidth);
+
+  // Track shadow
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.3)';
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetY = 3;
+
+  // Draw track (filled path)
+  ctx.beginPath();
+  ctx.moveTo(left[0][0], left[0][1]);
+  left.forEach(([x,y]) => ctx.lineTo(x,y));
+  right.slice().reverse().forEach(([x,y]) => ctx.lineTo(x,y));
+  ctx.closePath();
+  const trackGrad = ctx.createLinearGradient(0,0,W,0);
+  trackGrad.addColorStop(0,'#e8c49a');
+  trackGrad.addColorStop(0.5,'#d4a574');
+  trackGrad.addColorStop(1,'#c9956a');
+  ctx.fillStyle = trackGrad;
+  ctx.fill();
+  ctx.restore();
+
+  // Track border
+  ctx.strokeStyle = '#8B5E3C';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(left[0][0], left[0][1]);
+  left.forEach(([x,y]) => ctx.lineTo(x,y));
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(right[0][0], right[0][1]);
+  right.forEach(([x,y]) => ctx.lineTo(x,y));
+  ctx.stroke();
+
+  // Center dashed line
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([12, 8]);
+  ctx.beginPath();
+  waypoints.forEach(([x,y],i) => i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y));
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Start flag
+  const sp = waypoints[0];
+  ctx.fillStyle = '#5a9e32';
+  ctx.fillRect(sp[0]-2, sp[1]-trackWidth/2, 4, trackWidth);
+  ctx.font = 'bold 14px Nunito';
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.fillText('START', sp[0], sp[1]-trackWidth/2-8);
+
+  // Finish checkerboard
+  const fp = waypoints[waypoints.length-1];
+  const checkSize = 8;
+  for (let row=0; row<Math.ceil(trackWidth/checkSize); row++) {
+    for (let col=0; col<3; col++) {
+      const even = (row+col)%2===0;
+      ctx.fillStyle = even ? 'white' : '#333';
+      ctx.fillRect(fp[0]-6+col*checkSize, fp[1]-trackWidth/2+row*checkSize, checkSize, checkSize);
+    }
+  }
+  ctx.font = 'bold 14px Nunito';
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.fillText('🏁 FINISH', fp[0], fp[1]-trackWidth/2-8);
+
+  // Draw cursor on track
+  if (gameState === 'playing' || gameState === 'crashed') {
+    ctx.font = '20px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(gameState==='crashed'?'💥':'🐭', mouseX, mouseY+8);
+  }
+}
+
+function isOnTrack(x, y) {
+  // Check if point is within track polygon
+  const {left, right} = buildTrackPath(waypoints, trackWidth);
+
+  // Build polygon
+  const poly = [...left, ...right.slice().reverse()];
+
+  // Point in polygon test
+  let inside = false;
+  for (let i = 0, j = poly.length-1; i < poly.length; j = i++) {
+    const xi = poly[i][0], yi = poly[i][1];
+    const xj = poly[j][0], yj = poly[j][1];
+    const intersect = ((yi>y) !== (yj>y)) && (x < (xj-xi)*(y-yi)/(yj-yi)+xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function getProgress(x, y) {
+  // Find closest waypoint index
+  let minDist = Infinity, closestIdx = 0;
+  waypoints.forEach(([wx,wy], i) => {
+    const d = Math.sqrt((x-wx)**2 + (y-wy)**2);
+    if (d < minDist) { minDist = d; closestIdx = i; }
+  });
+  return closestIdx / (waypoints.length - 1);
+}
+
+function setLevel(lvl) {
+  level = lvl;
+  document.querySelectorAll('.level-btn').forEach((b,i) => {
+    b.classList.toggle('active', i+1===lvl);
+  });
+  document.getElementById('levelDisplay').textContent = lvl;
+  document.getElementById('bestTime').textContent = bestTimes[lvl] ? bestTimes[lvl]+'s' : '--';
+  resetGame(false);
+}
+
+function startGame() {
+  document.getElementById('startOverlay').style.display = 'none';
+  waypoints = getTrack(level);
+  gameState = 'idle';
+  // Place mouse hint at start
+  showMessage('Move your cursor onto the track to begin! 🐭');
+  drawTrack();
+}
+
+function resetGame(showOverlay=true) {
+  clearInterval(timerInterval);
+  gameState = 'idle';
+  progress = 0;
+  elapsed = 0;
+  document.getElementById('timer').textContent = '0.0s';
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('message').textContent = '';
+  if (showOverlay) document.getElementById('resultOverlay').classList.remove('active');
+  waypoints = getTrack(level);
+  document.getElementById('startOverlay').style.display = 'none';
+  drawTrack();
+  showMessage('Move your cursor to START to begin! 🐭');
+}
+
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = W / rect.width, scaleY = H / rect.height;
+  mouseX = (e.clientX - rect.left) * scaleX;
+  mouseY = (e.clientY - rect.top) * scaleY;
+  handleMove();
+});
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = W / rect.width, scaleY = H / rect.height;
+  mouseX = (e.touches[0].clientX - rect.left) * scaleX;
+  mouseY = (e.touches[0].clientY - rect.top) * scaleY;
+  handleMove();
+}, {passive:false});
+
+function handleMove() {
+  if (gameState === 'crashed' || gameState === 'won') return;
+  if (!waypoints.length) return;
+
+  const onTrack = isOnTrack(mouseX, mouseY);
+  const prog = getProgress(mouseX, mouseY);
+  progress = Math.max(progress, prog);
+  document.getElementById('progressBar').style.width = (progress*100)+'%';
+
+  // Start timing when near the start
+  if (gameState === 'idle' && prog < 0.15 && onTrack) {
+    gameState = 'playing';
+    startTime = Date.now();
+    timerInterval = setInterval(() => {
+      elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      document.getElementById('timer').textContent = elapsed + 's';
+    }, 100);
+    showMessage('Go!! 🐭💨');
+  }
+
+  if (gameState === 'playing') {
+    if (!onTrack) {
+      // Crashed!
+      gameState = 'crashed';
+      clearInterval(timerInterval);
+      drawTrack();
+      showMessage('CRASHED! 💥 Click to try again');
+      canvas.onclick = () => { canvas.onclick = null; resetGame(false); };
+      return;
+    }
+
+    // Check finish
+    if (prog > 0.95 && progress > 0.9) {
+      gameState = 'won';
+      clearInterval(timerInterval);
+      elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      document.getElementById('timer').textContent = elapsed + 's';
+      if (!bestTimes[level] || parseFloat(elapsed) < parseFloat(bestTimes[level])) {
+        bestTimes[level] = elapsed;
+        document.getElementById('bestTime').textContent = elapsed + 's';
+      }
+      setTimeout(() => showWin(), 500);
+    }
+  }
+
+  drawTrack();
+}
+
+function showWin() {
+  const msgs = {
+    1: `You made it! ${elapsed}s — not bad for a first lap 🌸`,
+    2: `Medium track crushed in ${elapsed}s! You've got skills 🌻`,
+    3: `HARD MODE in ${elapsed}s?! You're a legend 🔥`
+  };
+  document.getElementById('resultEmoji').textContent = '🏆';
+  document.getElementById('resultTitle').textContent = 'Finish Line! ♥';
+  document.getElementById('resultMsg').textContent = msgs[level] + ' Almost at the end of our little journey together 💕';
+  document.getElementById('resultOverlay').classList.add('active');
+}
+
+let msgTO;
+function showMessage(msg) {
+  const el = document.getElementById('message');
+  el.textContent = msg;
+  clearTimeout(msgTO);
+  msgTO = setTimeout(() => { if (gameState !== 'crashed') el.textContent = ''; }, 3000);
+}
+
+// Init
+waypoints = getTrack(1);
+drawTrack();
+</script>
+</body>
+</html>

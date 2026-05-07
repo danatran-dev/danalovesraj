@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Adventure ♥</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --grass: #7ec850;
+    --grass-dark: #5a9e32;
+    --path: #d4a574;
+    --path-dark: #b8845a;
+    --sky: #87ceeb;
+    --sky-bottom: #c8e6c9;
+    --wood: #8B5E3C;
+    --cream: #fdf6e3;
+    --pink: #f48fb1;
+    --pink-dark: #c2185b;
+    --yellow: #fff176;
+    --heart: #e91e63;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: linear-gradient(180deg, var(--sky) 0%, var(--sky-bottom) 60%, var(--grass) 100%);
+    min-height: 100vh;
+    font-family: 'Nunito', sans-serif;
+    overflow-x: hidden;
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Ctext y='16' font-size='16'%3E🌸%3C/text%3E%3C/svg%3E") 10 10, auto;
+  }
+
+  /* Floating clouds */
+  .cloud { position: fixed; background: white; border-radius: 50px; opacity: 0.8; animation: drift linear infinite; pointer-events: none; }
+  .cloud::before, .cloud::after { content: ''; position: absolute; background: white; border-radius: 50%; }
+  .cloud-1 { width: 80px; height: 30px; top: 8%; animation-duration: 35s; animation-delay: 0s; }
+  .cloud-1::before { width: 40px; height: 40px; top: -20px; left: 10px; }
+  .cloud-1::after { width: 30px; height: 30px; top: -15px; left: 35px; }
+  .cloud-2 { width: 120px; height: 40px; top: 15%; animation-duration: 50s; animation-delay: -15s; }
+  .cloud-2::before { width: 55px; height: 55px; top: -28px; left: 15px; }
+  .cloud-2::after { width: 45px; height: 45px; top: -22px; left: 55px; }
+  .cloud-3 { width: 60px; height: 25px; top: 5%; animation-duration: 42s; animation-delay: -8s; }
+  .cloud-3::before { width: 35px; height: 35px; top: -18px; left: 8px; }
+  @keyframes drift { from { left: -200px; } to { left: 110vw; } }
+
+  /* Stars/sparkles */
+  .sparkle { position: fixed; font-size: 12px; animation: twinkle 3s ease-in-out infinite; pointer-events: none; }
+  @keyframes twinkle { 0%,100%{opacity:0;transform:scale(0.5)} 50%{opacity:1;transform:scale(1)} }
+
+  /* Title sign */
+  .title-area {
+    text-align: center;
+    padding: 30px 20px 10px;
+    position: relative;
+    z-index: 10;
+  }
+  .title-sign {
+    display: inline-block;
+    background: var(--wood);
+    border: 4px solid #5a3a1a;
+    border-radius: 8px;
+    padding: 16px 32px;
+    position: relative;
+    box-shadow: 4px 4px 0 #3a2010, 0 8px 20px rgba(0,0,0,0.3);
+  }
+  .title-sign::before, .title-sign::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    width: 12px; height: 20px;
+    background: var(--wood);
+    border: 3px solid #5a3a1a;
+  }
+  .title-sign::before { left: 30%; }
+  .title-sign::after { right: 30%; }
+  .title-sign h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(10px, 2.5vw, 18px);
+    color: var(--yellow);
+    text-shadow: 2px 2px 0 #8B5E3C, 0 0 20px rgba(255,241,118,0.5);
+    line-height: 1.8;
+  }
+  .title-sign .subtitle {
+    font-family: 'Nunito', sans-serif;
+    color: #ffd6e0;
+    font-size: 13px;
+    margin-top: 6px;
+    font-weight: 600;
+  }
+
+  /* Intro message */
+  .intro-card {
+    max-width: 600px;
+    margin: 30px auto 20px;
+    background: var(--cream);
+    border: 3px solid var(--path-dark);
+    border-radius: 12px;
+    padding: 20px 24px;
+    text-align: center;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
+    position: relative;
+    z-index: 10;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #5a3a1a;
+  }
+  .intro-card .heart-row { font-size: 20px; margin-bottom: 8px; }
+
+  /* Game board area */
+  .board-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    position: relative;
+  }
+
+  /* Farm background elements */
+  .farm-bg {
+    position: relative;
+    background: linear-gradient(180deg, rgba(126,200,80,0.3) 0%, rgba(126,200,80,0.6) 100%);
+    border-radius: 20px;
+    border: 4px solid var(--grass-dark);
+    padding: 40px 30px 50px;
+    min-height: 600px;
+    overflow: hidden;
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.1), 6px 6px 0 rgba(0,0,0,0.2);
+  }
+
+  /* Path SVG */
+  .path-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+
+  /* Decorative elements */
+  .deco { position: absolute; font-size: 24px; pointer-events: none; animation: bobble 3s ease-in-out infinite; }
+  @keyframes bobble { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+  .deco:nth-child(2n) { animation-delay: -1.5s; }
+
+  /* Game stops */
+  .stops-wrapper { position: relative; z-index: 5; height: 520px; }
+
+  .game-stop {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .game-stop:hover { transform: scale(1.08) translateY(-4px); }
+  .game-stop:active { transform: scale(0.96); }
+
+  .stop-building {
+    width: 80px; height: 80px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    border: 3px solid rgba(0,0,0,0.3);
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.25), inset 0 2px 4px rgba(255,255,255,0.3);
+    position: relative;
+    transition: all 0.2s;
+  }
+
+  .stop-label {
+    margin-top: 6px;
+    background: var(--wood);
+    color: var(--yellow);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 2px solid #5a3a1a;
+    text-align: center;
+    max-width: 90px;
+    line-height: 1.5;
+    box-shadow: 2px 2px 0 #3a2010;
+  }
+
+  .stop-number {
+    position: absolute;
+    top: -10px; right: -10px;
+    background: var(--heart);
+    color: white;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid white;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+  }
+
+  /* Locked state */
+  .game-stop.locked .stop-building {
+    filter: grayscale(0.6) brightness(0.7);
+  }
+  .game-stop.locked .stop-building::after {
+    content: '🔒';
+    position: absolute;
+    font-size: 20px;
+    filter: none;
+  }
+  .game-stop.locked { cursor: not-allowed; }
+  .game-stop.locked:hover { transform: none; }
+
+  /* Completed state */
+  .game-stop.completed .stop-building::after {
+    content: '⭐';
+    position: absolute;
+    top: -12px; left: -12px;
+    font-size: 20px;
+    animation: spin-star 2s linear infinite;
+  }
+  @keyframes spin-star { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+
+  /* Avatars */
+  .avatars {
+    position: absolute;
+    display: flex;
+    gap: 6px;
+    transition: all 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 20;
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.3));
+  }
+  .avatar {
+    width: 36px; height: 36px;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    animation: walk-bounce 0.5s ease-in-out infinite alternate;
+  }
+  .avatar:nth-child(2) { animation-delay: 0.25s; }
+  @keyframes walk-bounce { from{transform:translateY(0)} to{transform:translateY(-4px)} }
+
+  /* Start button */
+  .start-area {
+    text-align: center;
+    padding: 20px;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* Progress bar */
+  .progress-area {
+    max-width: 600px;
+    margin: 0 auto 10px;
+    text-align: center;
+  }
+  .progress-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: var(--wood);
+    margin-bottom: 6px;
+  }
+  .progress-bar-outer {
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    height: 16px;
+    border: 2px solid var(--path-dark);
+    overflow: hidden;
+  }
+  .progress-bar-inner {
+    height: 100%;
+    background: linear-gradient(90deg, var(--pink), var(--heart));
+    border-radius: 8px;
+    transition: width 1s ease;
+    position: relative;
+  }
+  .progress-bar-inner::after {
+    content: '♥';
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: white;
+  }
+
+  /* Modal overlay */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-box {
+    background: var(--cream);
+    border: 4px solid var(--wood);
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 8px 8px 0 rgba(0,0,0,0.3);
+    animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes pop-in { from{transform:scale(0.5) rotate(-5deg);opacity:0} to{transform:scale(1) rotate(0);opacity:1} }
+  .modal-box h2 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    color: var(--wood);
+    margin-bottom: 12px;
+    line-height: 1.8;
+  }
+  .modal-box p { color: #5a3a1a; margin-bottom: 20px; line-height: 1.7; font-size: 14px; }
+  .btn {
+    display: inline-block;
+    background: var(--heart);
+    color: white;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 #a00030;
+    transition: all 0.1s;
+    text-decoration: none;
+    margin: 4px;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 3px 5px 0 #a00030; }
+  .btn:active { transform: translateY(1px); box-shadow: 1px 1px 0 #a00030; }
+  .btn-secondary {
+    background: var(--wood);
+    box-shadow: 3px 3px 0 #3a2010;
+  }
+  .btn-secondary:hover { box-shadow: 3px 5px 0 #3a2010; }
+
+  /* Fireworks for completion */
+  .firework { position: fixed; pointer-events: none; z-index: 200; font-size: 24px; animation: firework-fly 1.5s ease-out forwards; }
+  @keyframes firework-fly {
+    0% { transform: translateY(0) scale(0); opacity: 1; }
+    50% { transform: translateY(-100px) scale(1.5); opacity: 1; }
+    100% { transform: translateY(-200px) scale(0); opacity: 0; }
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .farm-bg { padding: 20px 15px 30px; min-height: 480px; }
+    .stop-building { width: 60px; height: 60px; font-size: 28px; }
+    .game-stop { width: 70px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Clouds -->
+<div class="cloud cloud-1"></div>
+<div class="cloud cloud-2"></div>
+<div class="cloud cloud-3"></div>
+
+<!-- Sparkles -->
+<div class="sparkle" style="top:20%;left:5%;animation-delay:0s">✨</div>
+<div class="sparkle" style="top:40%;left:92%;animation-delay:1s">⭐</div>
+<div class="sparkle" style="top:70%;left:3%;animation-delay:2s">✨</div>
+<div class="sparkle" style="top:10%;left:85%;animation-delay:0.5s">🌟</div>
+
+<!-- Title -->
+<div class="title-area">
+  <div class="title-sign">
+    <h1>Our Love Story</h1>
+    <div class="subtitle">4 Years of Adventures ♥</div>
+  </div>
+</div>
+
+<!-- Intro card -->
+<div class="intro-card">
+  <div class="heart-row">💌</div>
+  <strong>Hey Babes,</strong><br><br>
+  4 years ago everything changed. To celebrate, I made you a little game — 
+  it's a journey through our best memories. Walk the path, play the games, 
+  and find what's waiting at the end. 🌸<br><br>
+  <em>— Your Love ♥</em>
+</div>
+
+<!-- Progress -->
+<div class="board-container">
+  <div class="progress-area">
+    <div class="progress-label">Adventure Progress</div>
+    <div class="progress-bar-outer">
+      <div class="progress-bar-inner" id="progressBar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Farm Board -->
+  <div class="farm-bg" id="farmBoard">
+
+    <!-- Decorative elements -->
+    <span class="deco" style="top:5%;left:3%">🌻</span>
+    <span class="deco" style="top:8%;right:5%">🌷</span>
+    <span class="deco" style="bottom:5%;left:5%">🍄</span>
+    <span class="deco" style="bottom:8%;right:4%">🌼</span>
+    <span class="deco" style="top:45%;left:2%">🦋</span>
+    <span class="deco" style="top:30%;right:3%">🐝</span>
+    <span class="deco" style="bottom:20%;left:50%">🌿</span>
+    <span class="deco" style="top:60%;right:8%">🍀</span>
+
+    <!-- Path (SVG winding path) -->
+    <svg class="path-svg" viewBox="0 0 900 520" preserveAspectRatio="none">
+      <defs>
+        <pattern id="pathDots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+          <circle cx="10" cy="10" r="3" fill="rgba(255,255,255,0.4)"/>
+        </pattern>
+      </defs>
+      <!-- Main path -->
+      <path d="M 120 460 Q 200 420 250 340 Q 300 260 400 240 Q 500 220 550 160 Q 600 100 700 90 Q 780 85 820 100"
+        stroke="#d4a574" stroke-width="36" fill="none" stroke-linecap="round"/>
+      <path d="M 120 460 Q 200 420 250 340 Q 300 260 400 240 Q 500 220 550 160 Q 600 100 700 90 Q 780 85 820 100"
+        stroke="#e8c49a" stroke-width="28" fill="none" stroke-linecap="round"/>
+      <path d="M 120 460 Q 200 420 250 340 Q 300 260 400 240 Q 500 220 550 160 Q 600 100 700 90 Q 780 85 820 100"
+        stroke="url(#pathDots)" stroke-width="28" fill="none" stroke-linecap="round"/>
+    </svg>
+
+    <!-- Avatars -->
+    <div class="avatars" id="avatars" style="left:85px;top:420px;">
+      <div class="avatar">🧑‍🌾</div>
+      <div class="avatar">👩‍🌾</div>
+    </div>
+
+    <!-- Game stops wrapper -->
+    <div class="stops-wrapper">
+
+      <!-- Stop 1: Wordle - bottom left -->
+      <div class="game-stop" id="stop-1" style="left:60px;top:380px;" onclick="openStop(1)">
+        <div class="stop-building" style="background:linear-gradient(135deg,#a8e063,#56ab2f)">
+          🔤
+          <div class="stop-number">1</div>
+        </div>
+        <div class="stop-label">WORDLE</div>
+      </div>
+
+      <!-- Stop 2: Connections -->
+      <div class="game-stop locked" id="stop-2" style="left:210px;top:280px;" onclick="openStop(2)">
+        <div class="stop-building" style="background:linear-gradient(135deg,#f093fb,#f5576c)">
+          🔗
+          <div class="stop-number">2</div>
+        </div>
+        <div class="stop-label">CONNECTIONS</div>
+      </div>
+
+      <!-- Stop 3: Strands -->
+      <div class="game-stop locked" id="stop-3" style="left:360px;top:195px;" onclick="openStop(3)">
+        <div class="stop-building" style="background:linear-gradient(135deg,#4facfe,#00f2fe)">
+          🧵
+          <div class="stop-number">3</div>
+        </div>
+        <div class="stop-label">STRANDS</div>
+      </div>
+
+      <!-- Stop 4: Photo Match -->
+      <div class="game-stop locked" id="stop-4" style="left:510px;top:130px;" onclick="openStop(4)">
+        <div class="stop-building" style="background:linear-gradient(135deg,#f7971e,#ffd200)">
+          📸
+          <div class="stop-number">4</div>
+        </div>
+        <div class="stop-label">PHOTO MATCH</div>
+      </div>
+
+      <!-- Stop 5: Mouse Race -->
+      <div class="game-stop locked" id="stop-5" style="left:660px;top:70px;" onclick="openStop(5)">
+        <div class="stop-building" style="background:linear-gradient(135deg,#ee0979,#ff6a00)">
+          🏁
+          <div class="stop-number">5</div>
+        </div>
+        <div class="stop-label">MOUSE RACE</div>
+      </div>
+
+      <!-- Finish: Heart -->
+      <div class="game-stop locked" id="stop-finish" style="left:790px;top:55px;" onclick="openFinish()">
+        <div class="stop-building" style="background:linear-gradient(135deg,#ff758c,#ff7eb3);width:70px;height:70px;font-size:30px">
+          💝
+        </div>
+        <div class="stop-label">FINISH ♥</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Game Modal -->
+<div class="modal-overlay" id="gameModal">
+  <div class="modal-box">
+    <h2 id="modalTitle">Game Title</h2>
+    <p id="modalDesc">Description</p>
+    <a href="#" id="modalBtn" class="btn">Let's Go! ♥</a>
+    <button class="btn btn-secondary" onclick="closeModal()">Not Yet</button>
+  </div>
+</div>
+
+<!-- Locked Modal -->
+<div class="modal-overlay" id="lockedModal">
+  <div class="modal-box">
+    <h2>🔒 Locked!</h2>
+    <p>You need to complete the previous stop first, Babes! The path reveals itself one adventure at a time. 🌸</p>
+    <button class="btn" onclick="closeModal()">Got it!</button>
+  </div>
+</div>
+
+<!-- Finish Modal -->
+<div class="modal-overlay" id="finishModal">
+  <div class="modal-box">
+    <h2>💝 Almost There!</h2>
+    <p>Complete all 5 games to unlock the final surprise! 🌟</p>
+    <button class="btn" onclick="closeModal()">Keep going!</button>
+  </div>
+</div>
+
+<script>
+const games = [
+  { id: 1, title: "Stop 1: Wordle", desc: "Guess the 5-letter word that means everything to us 🌸 You get 6 tries!", file: "wordle.html" },
+  { id: 2, title: "Stop 2: Connections", desc: "Sort 16 words into 4 groups — all about us and our adventures together 🗺️", file: "connections.html" },
+  { id: 3, title: "Stop 3: Strands", desc: "Find the hidden words in the grid — they're all reasons why I love you 💕", file: "strands.html" },
+  { id: 4, title: "Stop 4: Photo Match", desc: "Match the pairs of photos from our memories together 📸", file: "photomatch.html" },
+  { id: 5, title: "Stop 5: Mouse Race", desc: "Race your mouse to the finish line — fastest hand wins! 🏁🐭", file: "mouserace.html" },
+];
+
+// Load progress from localStorage
+let completed = JSON.parse(localStorage.getItem('loveGame_completed') || '[]');
+updateBoard();
+
+function updateBoard() {
+  // Update stops
+  games.forEach(g => {
+    const el = document.getElementById(`stop-${g.id}`);
+    if (!el) return;
+    el.classList.remove('locked', 'completed');
+    if (completed.includes(g.id)) {
+      el.classList.add('completed');
+    } else if (g.id > 1 && !completed.includes(g.id - 1)) {
+      el.classList.add('locked');
+    }
+  });
+
+  // Finish stop
+  const finishEl = document.getElementById('stop-finish');
+  if (completed.length >= 5) {
+    finishEl.classList.remove('locked');
+  } else {
+    finishEl.classList.add('locked');
+    finishEl.setAttribute('onclick', 'openFinishLocked()');
+  }
+
+  // Progress bar
+  const pct = (completed.length / 5) * 100;
+  document.getElementById('progressBar').style.width = pct + '%';
+
+  // Move avatars to latest stop
+  moveAvatars();
+}
+
+const stopPositions = [
+  {left: 68, top: 395},
+  {left: 218, top: 295},
+  {left: 368, top: 210},
+  {left: 518, top: 145},
+  {left: 668, top: 85},
+  {left: 800, top: 75},
+];
+
+function moveAvatars() {
+  const idx = Math.min(completed.length, 5);
+  const pos = stopPositions[idx];
+  const el = document.getElementById('avatars');
+  el.style.left = (pos.left - 10) + 'px';
+  el.style.top = (pos.top - 40) + 'px';
+}
+
+function openStop(id) {
+  const stop = document.getElementById(`stop-${id}`);
+  if (stop.classList.contains('locked')) {
+    document.getElementById('lockedModal').classList.add('active');
+    return;
+  }
+  const game = games[id - 1];
+  document.getElementById('modalTitle').textContent = game.title;
+  document.getElementById('modalDesc').textContent = game.desc;
+  document.getElementById('modalBtn').href = game.file;
+  document.getElementById('gameModal').classList.add('active');
+}
+
+function openFinish() {
+  if (completed.length < 5) {
+    openFinishLocked();
+    return;
+  }
+  window.location.href = 'finale.html';
+}
+
+function openFinishLocked() {
+  document.getElementById('finishModal').classList.add('active');
+}
+
+function closeModal() {
+  document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+}
+
+// Check if returning from a completed game
+const urlParams = new URLSearchParams(window.location.search);
+const justCompleted = parseInt(urlParams.get('completed'));
+if (justCompleted && !completed.includes(justCompleted)) {
+  completed.push(justCompleted);
+  localStorage.setItem('loveGame_completed', JSON.stringify(completed));
+  updateBoard();
+  // Celebration
+  celebrate();
+}
+
+function celebrate() {
+  const emojis = ['💕','🌸','⭐','✨','🎉','💖','🌟','🍀'];
+  for (let i = 0; i < 12; i++) {
+    setTimeout(() => {
+      const fw = document.createElement('div');
+      fw.className = 'firework';
+      fw.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      fw.style.left = Math.random() * 90 + 'vw';
+      fw.style.top = '80vh';
+      fw.style.animationDuration = (1 + Math.random()) + 's';
+      document.body.appendChild(fw);
+      setTimeout(() => fw.remove(), 2000);
+    }, i * 150);
+  }
+}
+
+// Click outside modal to close
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if(e.target === m) closeModal(); });
+});
+</script>
+</body>
+</html>

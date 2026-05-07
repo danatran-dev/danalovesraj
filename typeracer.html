@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Type Racer ♥ Stop 4</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff0f5;--pink:#ff7eb3;--pink-dark:#d63384;--pink-light:#ffd6e8;--hotpink:#ff4d94;--cream:#fef9f0;--wood:#7a4a2a;--yellow:#ffd93d;--green:#4caf50;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:#5a1a3a;font-family:'Nunito',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;
+  background-image: radial-gradient(circle at 20% 20%, #ffd6e8 0%, transparent 40%), radial-gradient(circle at 80% 80%, #ffc2d4 0%, transparent 40%);}
+
+.top-bar{width:100%;max-width:700px;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:3px solid var(--pink);margin-bottom:20px;}
+.back-link{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--pink-dark);text-decoration:none;}
+.back-link:hover{color:var(--hotpink);}
+.game-title{font-family:'Press Start 2P',monospace;font-size:12px;color:var(--pink-dark);text-shadow:1px 1px 0 #ffb3cc;}
+.stop-pill{font-family:'Press Start 2P',monospace;font-size:7px;background:var(--hotpink);color:white;padding:5px 10px;border-radius:12px;box-shadow:2px 2px 0 var(--pink-dark);}
+
+/* Floating hearts */
+.floating-hearts{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
+.fheart{position:absolute;animation:floatHeart linear infinite;font-size:14px;opacity:0.4;}
+@keyframes floatHeart{0%{transform:translateY(100vh) rotate(0);opacity:.4}100%{transform:translateY(-10vh) rotate(20deg);opacity:0}}
+
+/* Race track */
+.race-scene{width:100%;max-width:700px;padding:0 16px;margin-bottom:20px;position:relative;z-index:1;}
+.track-road{
+  background:linear-gradient(180deg,#ffd6e8 0%,#ffb3cc 50%,#ffd6e8 100%);
+  border:3px solid var(--pink);border-radius:12px;height:90px;
+  position:relative;overflow:hidden;margin-bottom:6px;
+  box-shadow:0 4px 0 var(--pink-dark), inset 0 2px 8px rgba(255,77,148,.15);
+}
+/* Road texture */
+.track-road::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,transparent,transparent 30px,rgba(255,255,255,.25) 30px,rgba(255,255,255,.25) 32px);
+}
+.lane-line{position:absolute;top:50%;left:0;right:0;border-top:3px dashed rgba(255,255,255,.7);transform:translateY(-50%);}
+.finish-line{position:absolute;right:0;top:0;bottom:0;width:28px;
+  background:repeating-linear-gradient(90deg,white 0,white 7px,var(--pink) 7px,var(--pink) 14px);
+  opacity:.9;border-radius:0 10px 10px 0;}
+.finish-flag{position:absolute;right:30px;top:-2px;font-size:20px;}
+
+/* Porsche SVG car */
+.racer{position:absolute;top:50%;transform:translateY(-50%);transition:left .3s ease;filter:drop-shadow(0 3px 6px rgba(214,51,132,.4));}
+#playerCar{top:18%;}
+
+/* Progress bar */
+.progress-track{height:12px;background:var(--pink-light);border-radius:10px;overflow:hidden;margin-bottom:4px;border:2px solid var(--pink);}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--hotpink),var(--pink-dark));border-radius:8px;transition:width .2s;width:0%;}
+.progress-label{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--pink-dark);display:flex;justify-content:space-between;}
+
+/* Stats */
+.stats-row{display:flex;gap:12px;justify-content:center;margin-bottom:20px;flex-wrap:wrap;position:relative;z-index:1;}
+.stat-box{background:white;border:3px solid var(--pink);border-radius:12px;padding:10px 18px;text-align:center;box-shadow:3px 3px 0 var(--pink);}
+.stat-val{font-family:'Press Start 2P',monospace;font-size:16px;color:var(--pink-dark);display:block;margin-bottom:4px;}
+.stat-label{font-family:'Press Start 2P',monospace;font-size:6px;color:#d63384;}
+
+/* Text display */
+.type-area{max-width:700px;width:100%;padding:0 16px;margin-bottom:20px;position:relative;z-index:1;}
+.sentence-display{
+  background:white;border:3px solid var(--pink);border-radius:12px;
+  padding:18px 20px;font-size:16px;line-height:2;margin-bottom:14px;
+  letter-spacing:.3px;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;
+  box-shadow:3px 3px 0 var(--pink);
+}
+.char-correct{color:var(--green);}
+.char-wrong{color:#f44336;background:rgba(244,67,54,.15);border-radius:2px;}
+.char-cursor{border-left:2px solid var(--hotpink);animation:blink .8s step-end infinite;}
+@keyframes blink{0%,100%{border-color:var(--hotpink)}50%{border-color:transparent}}
+.char-pending{color:#ccc;}
+
+.type-input{
+  width:100%;background:white;border:3px solid var(--pink);border-radius:12px;
+  padding:16px;font-size:16px;color:#5a1a3a;font-family:'Nunito',sans-serif;
+  outline:none;transition:border .2s;box-shadow:3px 3px 0 var(--pink);
+}
+.type-input:focus{border-color:var(--hotpink);box-shadow:3px 3px 0 var(--hotpink);}
+.type-input::placeholder{color:#ffb3cc;}
+
+/* Start screen */
+.start-screen{max-width:500px;width:100%;padding:0 16px;text-align:center;position:relative;z-index:1;}
+.start-screen h2{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--pink-dark);margin-bottom:16px;line-height:1.8;}
+.start-screen p{font-size:14px;color:#a0406a;margin-bottom:24px;line-height:1.7;}
+.preview-box{background:white;border:3px solid var(--pink);border-radius:12px;padding:16px;margin-bottom:24px;font-size:13px;color:#a0406a;line-height:1.8;font-style:italic;box-shadow:3px 3px 0 var(--pink);}
+.countdown{font-family:'Press Start 2P',monospace;font-size:48px;color:var(--hotpink);text-align:center;animation:countPop .4s ease;text-shadow:2px 2px 0 var(--pink-dark);}
+@keyframes countPop{from{transform:scale(2);opacity:0}to{transform:scale(1);opacity:1}}
+.start-btn{
+  background:linear-gradient(135deg,var(--hotpink),var(--pink-dark));
+  color:white;border:none;border-radius:12px;padding:16px 32px;
+  font-family:'Press Start 2P',monospace;font-size:10px;cursor:pointer;
+  transition:all .1s;box-shadow:0 5px 0 #a0004a,3px 3px 12px rgba(255,77,148,.4);
+}
+.start-btn:hover{transform:translateY(-2px);box-shadow:0 7px 0 #a0004a,3px 3px 16px rgba(255,77,148,.5);}
+.start-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #a0004a;}
+
+/* Result */
+.result-overlay{display:none;position:fixed;inset:0;background:rgba(255,100,160,.5);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.result-overlay.show{display:flex;}
+.result-box{background:var(--cream);border:5px solid var(--pink-dark);border-radius:16px;padding:28px 24px;max-width:420px;width:100%;text-align:center;box-shadow:0 0 0 3px var(--pink-light),8px 8px 0 rgba(0,0,0,.15);animation:popIn .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+.result-box .re{font-size:52px;display:block;margin-bottom:12px;}
+.result-box h2{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--pink-dark);margin-bottom:12px;line-height:1.8;}
+.result-box p{font-size:13px;color:#5a1a3a;line-height:1.8;margin-bottom:20px;}
+.r-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;}
+.r-stat{background:var(--pink-light);border-radius:8px;padding:10px;text-align:center;border:2px solid var(--pink);}
+.r-stat span{display:block;font-family:'Press Start 2P',monospace;font-size:14px;color:var(--pink-dark);margin-bottom:4px;}
+.r-stat small{font-family:'Press Start 2P',monospace;font-size:6px;color:#d63384;}
+.r-btn{display:inline-block;background:var(--hotpink);color:white;font-family:'Press Start 2P',monospace;font-size:9px;padding:14px 22px;border:none;border-radius:8px;cursor:pointer;text-decoration:none;box-shadow:3px 3px 0 var(--pink-dark);transition:all .1s;margin:4px;}
+.r-btn:hover{transform:translateY(-2px);}
+.r-btn-sec{background:var(--wood);box-shadow:3px 3px 0 #3a1a00;}
+
+.result-close-btn{position:absolute;top:10px;right:14px;background:none;border:none;font-size:20px;cursor:pointer;color:#888;line-height:1;padding:4px;}
+.result-close-btn:hover{color:#333;}
+.result-box{position:relative;}
+.step-closer{font-family:'Press Start 2P',monospace;font-size:8px;color:#e8174a;background:#fff0f5;border:2px solid #ffb3cc;border-radius:8px;padding:10px 14px;margin-bottom:16px;line-height:1.8;}
+</style>
+</head>
+<body>
+
+<!-- Floating hearts background -->
+<div class="floating-hearts" id="hearts"></div>
+
+<div class="top-bar">
+  <a href="index.html" class="back-link">← MAP</a>
+  <div class="game-title">TYPE RACER 🏎️</div>
+  <div class="stop-pill">STOP 4</div>
+</div>
+
+<!-- Start screen -->
+<div class="start-screen" id="startScreen">
+  <h2>⌨️ TYPE RACER<br>CHALLENGE! 💕</h2>
+  <p>Type the sentence below as fast as you can, <strong style="color:var(--pink-dark)">Babes</strong>! Every word counts 🏁</p>
+  <div class="preview-box">
+    "My girlfriend is the most beautiful, intelligent, funny, gorgeous, smart, and sexy human being on this planet. I will forever worship the ground she walks on because I love her so much and she loves me so much. Cheers!"
+  </div>
+  <button class="start-btn" onclick="startCountdown()">🏁 START RACE!</button>
+</div>
+
+<!-- Countdown -->
+<div id="countdownEl" style="display:none;padding:40px;text-align:center;position:relative;z-index:1;">
+  <div class="countdown" id="countNum">3</div>
+  <p style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--pink);margin-top:16px;">GET READY... 💕</p>
+</div>
+
+<!-- Game area -->
+<div id="gameArea" style="display:none;width:100%;max-width:700px;">
+  <div class="race-scene">
+    <div class="track-road">
+      <div class="lane-line"></div>
+      <div class="finish-line"></div>
+      <span class="finish-flag">🏁</span>
+
+      <!-- Porsche SVG car -->
+      <div class="racer" id="playerCar" style="left:2%;top:15%">
+        <svg width="80" height="36" viewBox="0 0 80 36" xmlns="http://www.w3.org/2000/svg">
+          <!-- Shadow -->
+          <ellipse cx="40" cy="34" rx="32" ry="3" fill="rgba(0,0,0,0.2)"/>
+          <!-- Body lower -->
+          <rect x="6" y="18" width="68" height="12" rx="4" fill="#ff4d94"/>
+          <!-- Body upper (cabin) -->
+          <path d="M18 18 Q22 6 32 5 L52 5 Q60 5 64 14 L64 18 Z" fill="#ff7eb3"/>
+          <!-- Windshield -->
+          <path d="M30 6 Q32 5 50 5 Q56 6 60 14 L52 14 Q48 8 34 8 Z" fill="#ffe0ef" opacity=".9"/>
+          <!-- Rear window -->
+          <path d="M20 7 Q22 6 30 6 L28 14 L18 14 Z" fill="#ffe0ef" opacity=".7"/>
+          <!-- Side stripe -->
+          <rect x="8" y="20" width="64" height="3" rx="1" fill="#d63384" opacity=".5"/>
+          <!-- Front bumper -->
+          <path d="M70 20 Q78 21 78 25 L70 25 Z" fill="#ff4d94"/>
+          <!-- Rear bumper -->
+          <path d="M10 20 Q2 21 2 25 L10 25 Z" fill="#ff4d94"/>
+          <!-- Front lights -->
+          <ellipse cx="73" cy="22" rx="4" ry="3" fill="#fff9c4"/>
+          <ellipse cx="73" cy="22" rx="3" ry="2" fill="#ffd93d"/>
+          <!-- Rear lights -->
+          <ellipse cx="7" cy="22" rx="3" ry="2.5" fill="#ff0055"/>
+          <!-- Wheels -->
+          <circle cx="20" cy="28" r="7" fill="#2a2a2a"/>
+          <circle cx="20" cy="28" r="4.5" fill="#555"/>
+          <circle cx="20" cy="28" r="2" fill="#888"/>
+          <circle cx="58" cy="28" r="7" fill="#2a2a2a"/>
+          <circle cx="58" cy="28" r="4.5" fill="#555"/>
+          <circle cx="58" cy="28" r="2" fill="#888"/>
+          <!-- Wheel shine -->
+          <circle cx="19" cy="26" r="1" fill="rgba(255,255,255,.4)"/>
+          <circle cx="57" cy="26" r="1" fill="rgba(255,255,255,.4)"/>
+          <!-- Pink heart detail -->
+          <text x="38" y="17" font-size="7" text-anchor="middle">♥</text>
+        </svg>
+      </div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label"><span>🌸 START</span><span>FINISH 🏁</span></div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box"><span class="stat-val" id="wpmVal">0</span><span class="stat-label">WPM</span></div>
+    <div class="stat-box"><span class="stat-val" id="accuracyVal">100%</span><span class="stat-label">ACCURACY</span></div>
+    <div class="stat-box"><span class="stat-val" id="timerVal">0.0s</span><span class="stat-label">TIME</span></div>
+  </div>
+
+  <div class="type-area">
+    <div class="sentence-display" id="sentenceDisplay"></div>
+    <input type="text" class="type-input" id="typeInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Start typing here... 💕"/>
+  </div>
+</div>
+
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-box"><button class="result-close-btn" onclick="closeResult()">✕</button>
+    <span class="re" id="rEmoji">🎉</span>
+    <h2 id="rTitle"></h2>
+    <div id="stepCloser" class="step-closer" style="display:none">🗺️ One step closer to your love letter — keep going!</div>
+    <p id="rMsg"></p>
+    <div id="winBtns" style="display:none;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px;">
+      <a href="index.html?done=4" class="r-btn">Back to Map →</a>
+      <button class="r-btn r-btn-secondary" onclick="closeResult()">Stay &amp; Look 👀</button>
+    </div>
+    <div id="loseBtns" style="display:none;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px;">
+      <button class="r-btn r-btn-secondary" onclick="resetGame()">Try Again</button>
+      <button class="r-btn" onclick="closeResult()">Keep Looking 👀</button>
+    </div></div>
+</div>
+<script>
+const TARGET = "My girlfriend is the most beautiful, intelligent, funny, gorgeous, smart, and sexy human being on this planet. I will forever worship the ground she walks on because I love her so much and she loves me so much. Cheers!";
+
+// Floating hearts
+const heartsEl = document.getElementById('hearts');
+const heartEmojis = ['💕','🌸','💖','💗','🌷','💝','✨'];
+function spawnHeart(){
+  const h = document.createElement('div');
+  h.className = 'fheart';
+  h.textContent = heartEmojis[Math.floor(Math.random()*heartEmojis.length)];
+  h.style.left = Math.random()*100+'vw';
+  h.style.animationDuration = (8+Math.random()*8)+'s';
+  h.style.animationDelay = '0s';
+  heartsEl.appendChild(h);
+  setTimeout(()=>h.remove(), 16000);
+}
+for(let i=0;i<6;i++) setTimeout(spawnHeart, i*600);
+setInterval(spawnHeart, 2000);
+
+let startTime=null, timerInterval=null, errors=0, totalTyped=0, gameRunning=false;
+
+function renderSentence(typed){
+  const disp=document.getElementById('sentenceDisplay');
+  let html='';
+  for(let i=0;i<TARGET.length;i++){
+    if(i<typed.length){
+      if(typed[i]===TARGET[i]) html+=`<span class="char-correct">${esc(TARGET[i])}</span>`;
+      else html+=`<span class="char-wrong">${esc(TARGET[i])}</span>`;
+    } else if(i===typed.length){
+      html+=`<span class="char-cursor">${esc(TARGET[i])}</span>`;
+    } else {
+      html+=`<span class="char-pending">${esc(TARGET[i])}</span>`;
+    }
+  }
+  disp.innerHTML=html;
+}
+
+function esc(c){return c===' '?'&nbsp;':c.replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function startCountdown(){
+  document.getElementById('startScreen').style.display='none';
+  document.getElementById('countdownEl').style.display='block';
+  let n=3;
+  const tick=()=>{
+    const el=document.getElementById('countNum');
+    el.textContent=n===0?'GO! 💕':n;
+    el.style.animation='none';
+    void el.offsetWidth;
+    el.style.animation='countPop .4s ease';
+    if(n===0){ setTimeout(startRace, 500); }
+    else { n--; setTimeout(tick,800); }
+  };
+  tick();
+}
+
+function startRace(){
+  document.getElementById('countdownEl').style.display='none';
+  document.getElementById('gameArea').style.display='block';
+  renderSentence('');
+  const inp=document.getElementById('typeInput');
+  inp.disabled=false;inp.value='';inp.focus();
+  gameRunning=true;
+  inp.addEventListener('input',handleInput);
+}
+
+function handleInput(e){
+  if(!gameRunning)return;
+  const val=e.target.value;
+  if(!startTime){
+    startTime=Date.now();
+    timerInterval=setInterval(updateStats,100);
+  }
+  totalTyped++;
+  const pos=val.length-1;
+  if(pos>=0&&val[pos]!==TARGET[pos]) errors++;
+  renderSentence(val);
+  const pct=val.length/TARGET.length*100;
+  document.getElementById('progressFill').style.width=Math.min(pct,100)+'%';
+  document.getElementById('playerCar').style.left=`calc(${Math.min(pct,92)}% - 40px)`;
+  if(val===TARGET){ finishRace(val); }
+}
+
+function inputEl(){return document.getElementById('typeInput');}
+
+function updateStats(){
+  if(!startTime)return;
+  const elapsed=(Date.now()-startTime)/1000;
+  const words=inputEl().value.length/5;
+  const wpm=Math.round(words/(elapsed/60))||0;
+  const acc=Math.max(0,Math.round((1-errors/Math.max(1,totalTyped))*100));
+  document.getElementById('wpmVal').textContent=wpm;
+  document.getElementById('accuracyVal').textContent=acc+'%';
+  document.getElementById('timerVal').textContent=elapsed.toFixed(1)+'s';
+}
+
+function finishRace(){
+  gameRunning=false;
+  clearInterval(timerInterval);
+  const elapsed=((Date.now()-startTime)/1000).toFixed(1);
+  const words=TARGET.length/5;
+  const wpm=Math.round(words/(elapsed/60));
+  const acc=Math.max(0,Math.round((1-errors/Math.max(1,totalTyped))*100));
+  inputEl().disabled=true;
+  document.getElementById('finalWpm').textContent=wpm;
+  document.getElementById('finalAcc').textContent=acc+'%';
+  document.getElementById('finalTime').textContent=elapsed+'s';
+  document.getElementById('finalErrors').textContent=errors;
+  let msg='';
+  if(wpm>60) msg="Zoom zoom!! You really typed all that with a smile 😂💕";
+  else if(wpm>40) msg="Pretty fast fingers, Babes! Hope you meant every word 💕";
+  else msg="It took a while but hey — the truth takes time 💅 Back to map!";
+  document.getElementById('rMsg').textContent=msg;
+  setTimeout(()=>document.getElementById('resultOverlay').classList.add('show'),500);
+}
+
+function resetGame(){
+  document.getElementById('resultOverlay').classList.remove('show');
+  document.getElementById('gameArea').style.display='none';
+  startTime=null;timerInterval=null;errors=0;totalTyped=0;gameRunning=false;
+  inputEl().removeEventListener('input',handleInput);
+  document.getElementById('startScreen').style.display='block';
+}
+
+</script>
+</body>
+</html>

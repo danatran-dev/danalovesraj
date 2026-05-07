@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strands ♥ Stop 3</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fdf6e3;
+    --wood: #8B5E3C;
+    --heart: #e91e63;
+    --found: #5a9e32;
+    --spangram: #d4a017;
+    --selecting: #64b5f6;
+  }
+  * { margin:0;padding:0;box-sizing:border-box; }
+  body {
+    background: linear-gradient(135deg, #87ceeb 0%, #c8e6c9 50%, #7ec850 100%);
+    min-height: 100vh;
+    font-family: 'Nunito', sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px;
+  }
+  .game-header { text-align:center; margin-bottom:14px; }
+  .back-btn { display:inline-block; font-family:'Press Start 2P',monospace; font-size:7px; color:var(--wood); text-decoration:none; background:var(--bg); border:2px solid var(--wood); padding:6px 12px; border-radius:6px; margin-bottom:10px; box-shadow:2px 2px 0 rgba(0,0,0,0.2); }
+  .stop-badge { font-family:'Press Start 2P',monospace; font-size:9px; color:white; background:var(--heart); padding:6px 14px; border-radius:20px; display:inline-block; margin-bottom:8px; box-shadow:2px 2px 0 #a00030; }
+  h1 { font-family:'Press Start 2P',monospace; font-size:clamp(12px,3vw,20px); color:var(--wood); margin-bottom:6px; }
+  .hint { font-size:13px; color:#5a3a1a; background:rgba(255,255,255,0.7); padding:8px 16px; border-radius:20px; font-weight:700; display:inline-block; }
+
+  .game-panel {
+    background: var(--bg);
+    border: 3px solid var(--wood);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 5px 5px 0 rgba(0,0,0,0.2);
+    width: 100%; max-width: 420px;
+  }
+
+  /* Theme + found words */
+  .theme-box {
+    text-align:center;
+    font-family:'Press Start 2P',monospace;
+    font-size:8px;
+    color:var(--wood);
+    background:rgba(255,215,0,0.2);
+    border:2px solid var(--spangram);
+    border-radius:8px;
+    padding:10px;
+    margin-bottom:12px;
+    line-height:1.8;
+  }
+
+  .found-words {
+    display:flex; flex-wrap:wrap; gap:6px;
+    margin-bottom:12px; justify-content:center;
+    min-height:32px;
+  }
+  .found-word {
+    font-family:'Press Start 2P',monospace;
+    font-size:6px;
+    padding:5px 10px;
+    border-radius:20px;
+    color:white;
+    animation:pop-in 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .found-word.normal { background:var(--found); }
+  .found-word.spangram { background:var(--spangram); }
+  @keyframes pop-in { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+
+  /* Grid */
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+    margin-bottom: 14px;
+    user-select: none;
+    touch-action: none;
+  }
+  .cell {
+    aspect-ratio: 1;
+    border: 2px solid #d4a574;
+    border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Press Start 2P',monospace;
+    font-size:clamp(7px,1.8vw,10px);
+    font-weight:bold;
+    color:#5a3a1a;
+    background:white;
+    cursor:pointer;
+    transition:all 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cell:hover { background:#fff0e0; }
+  .cell.selecting { background:var(--selecting); color:white; border-color:var(--selecting); transform:scale(1.1); }
+  .cell.found-normal { background:var(--found); color:white; border-color:var(--found); }
+  .cell.found-spangram { background:var(--spangram); color:white; border-color:var(--spangram); }
+  .cell.wrong-flash { animation:wrong-flash 0.4s ease; }
+  @keyframes wrong-flash { 0%,100%{background:white} 50%{background:#ffcdd2} }
+
+  #current-word {
+    text-align:center;
+    font-family:'Press Start 2P',monospace;
+    font-size:10px;
+    color:var(--wood);
+    min-height:24px;
+    margin-bottom:8px;
+    letter-spacing:2px;
+  }
+
+  #message {
+    text-align:center;
+    font-family:'Press Start 2P',monospace;
+    font-size:7px;
+    color:var(--heart);
+    min-height:20px;
+    line-height:1.8;
+  }
+
+  /* Result overlay */
+  .result-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:50; align-items:center; justify-content:center; padding:20px; }
+  .result-overlay.active { display:flex; }
+  .result-box { background:var(--bg); border:4px solid var(--wood); border-radius:16px; padding:32px 24px; text-align:center; max-width:360px; box-shadow:8px 8px 0 rgba(0,0,0,0.3); animation:pop-in 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+  .result-box .emoji { font-size:48px; margin-bottom:12px; }
+  .result-box h2 { font-family:'Press Start 2P',monospace; font-size:10px; color:var(--wood); margin-bottom:12px; line-height:1.8; }
+  .result-box p { color:#5a3a1a; margin-bottom:20px; line-height:1.7; font-size:13px; }
+  .rbtn { display:inline-block; background:var(--heart); color:white; font-family:'Press Start 2P',monospace; font-size:8px; padding:12px 20px; border:none; border-radius:8px; cursor:pointer; box-shadow:3px 3px 0 #a00030; text-decoration:none; margin:4px; transition:all 0.1s; }
+  .rbtn:hover { transform:translateY(-2px); }
+  .rbtn-wood { background:var(--wood); box-shadow:3px 3px 0 #3a2010; }
+</style>
+</head>
+<body>
+
+<div class="game-header">
+  <a href="index.html" class="back-btn">← Back to Map</a><br>
+  <span class="stop-badge">🧵 Stop 3 of 5</span>
+  <h1>STRANDS ♥</h1>
+  <div class="hint">Find words that describe why I love you 💕</div>
+</div>
+
+<div class="game-panel">
+  <div class="theme-box">Theme: "WHY I LOVE YOU" 💝<br><span style="color:#888;font-size:6px">Find all the hidden words!</span></div>
+  <div class="found-words" id="foundWords"></div>
+  <div id="current-word"></div>
+  <div id="grid"></div>
+  <div id="message"></div>
+</div>
+
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-box">
+    <div class="emoji">💝</div>
+    <h2>You Found Them All!</h2>
+    <p id="resultMsg">These are all the reasons I love you, Babes. Every single one. 💕</p>
+    <a href="index.html?completed=3" class="rbtn">Next Stop →</a>
+    <button class="rbtn rbtn-wood" onclick="resetGame()">Play Again</button>
+  </div>
+</div>
+
+<script>
+// 8x7 grid layout — words placed manually to fit neatly
+// Words: PATIENT (7), GENTLE (6), ADORABLE (8), SEXY (4), RESPECTFUL (10), FOODIE (6)
+// Total letters = 41 — fill 56 cells (8x7)
+
+// Grid layout (8 cols x 7 rows)
+const GRID_LETTERS = [
+  ['R','E','S','P','E','C','T','F'],
+  ['U','L','A','D','O','R','A','B'],
+  ['L','E','G','E','N','T','L','E'],
+  ['P','A','T','I','E','N','T','X'],
+  ['F','O','O','D','I','E','S','Y'],
+  ['S','E','X','Y','M','O','R','E'],
+  ['L','O','V','E','Y','O','U','Z'],
+];
+
+// Word definitions: word, cells (row,col) path
+const WORDS = [
+  {
+    word: 'RESPECTFUL',
+    cells: [[0,0],[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7],[1,0],[1,1]],
+    type: 'spangram'
+  },
+  {
+    word: 'ADORABLE',
+    cells: [[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[2,7],[2,6]],
+    type: 'normal'
+  },
+  {
+    word: 'GENTLE',
+    cells: [[2,2],[2,3],[2,4],[2,5],[2,4],[2,3]],
+    // actually let's redo this simply
+    type: 'normal'
+  },
+  {
+    word: 'PATIENT',
+    cells: [[3,0],[3,1],[3,2],[3,3],[3,4],[3,5],[3,6]],
+    type: 'normal'
+  },
+  {
+    word: 'FOODIE',
+    cells: [[4,0],[4,1],[4,2],[4,3],[4,4],[4,5]],
+    type: 'normal'
+  },
+  {
+    word: 'SEXY',
+    cells: [[5,1],[5,2],[5,3],[4,6],[4,7],[5,4]],
+    type: 'normal'
+  },
+];
+
+// Rebuild properly: simpler fixed grid
+const LAYOUT = [
+  ['R','E','S','P','E','C','T','F'],
+  ['U','L','A','D','O','R','A','B'],
+  ['G','E','N','T','L','E','L','E'],
+  ['P','A','T','I','E','N','T','S'],
+  ['F','O','O','D','I','E','X','Y'],
+  ['H','E','A','R','T','S','E','Z'],
+  ['J','O','Y','F','U','L','L','Y'],
+];
+
+const WORD_PATHS = {
+  'PATIENT':    [[3,0],[3,1],[3,2],[3,3],[3,4],[3,5],[3,6]],
+  'GENTLE':     [[2,0],[2,1],[2,2],[2,3],[2,4],[2,5]],
+  'ADORABLE':   [[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[2,7],[2,6]],
+  'SEXY':       [[4,6],[4,7],[3,7],[5,6]],
+  'RESPECTFUL': [[0,0],[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7],[1,0],[1,1]],
+  'FOODIE':     [[4,0],[4,1],[4,2],[4,3],[4,4],[4,5]],
+};
+
+const WORD_TYPES = {
+  'RESPECTFUL': 'spangram',
+  'PATIENT': 'normal', 'GENTLE': 'normal', 'ADORABLE': 'normal',
+  'SEXY': 'normal', 'FOODIE': 'normal'
+};
+
+let selecting = false;
+let currentPath = [];
+let foundWords = [];
+let cellStates = {}; // key: "r,c" -> 'found-normal'|'found-spangram'
+
+function cellKey(r, c) { return `${r},${c}`; }
+
+function init() {
+  selecting = false;
+  currentPath = [];
+  foundWords = [];
+  cellStates = {};
+  renderGrid();
+  document.getElementById('foundWords').innerHTML = '';
+  document.getElementById('current-word').textContent = '';
+  document.getElementById('message').textContent = '';
+}
+
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  for (let r = 0; r < 7; r++) {
+    for (let c = 0; c < 8; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.id = `cell-${r}-${c}`;
+      cell.textContent = LAYOUT[r][c];
+      const state = cellStates[cellKey(r,c)];
+      if (state) cell.classList.add(state);
+
+      // Mouse events
+      cell.addEventListener('mousedown', e => { e.preventDefault(); startSelect(r,c); });
+      cell.addEventListener('mouseenter', e => { if (selecting) continueSelect(r,c); });
+      // Touch events
+      cell.addEventListener('touchstart', e => { e.preventDefault(); startSelect(r,c); }, {passive:false});
+      cell.addEventListener('touchmove', e => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (el && el.classList.contains('cell')) {
+          const id = el.id.split('-');
+          continueSelect(parseInt(id[1]), parseInt(id[2]));
+        }
+      }, {passive:false});
+
+      grid.appendChild(cell);
+    }
+  }
+
+  document.addEventListener('mouseup', endSelect);
+  document.addEventListener('touchend', endSelect);
+}
+
+function startSelect(r, c) {
+  if (cellStates[cellKey(r,c)]) return;
+  selecting = true;
+  currentPath = [[r,c]];
+  updateSelecting();
+}
+
+function continueSelect(r, c) {
+  if (!selecting) return;
+  if (cellStates[cellKey(r,c)]) return;
+  const key = cellKey(r,c);
+  const alreadyIn = currentPath.some(([pr,pc]) => pr===r && pc===c);
+  if (alreadyIn) {
+    // backtrack
+    const idx = currentPath.findIndex(([pr,pc]) => pr===r && pc===c);
+    currentPath = currentPath.slice(0, idx+1);
+  } else {
+    // check adjacency
+    const last = currentPath[currentPath.length-1];
+    if (Math.abs(last[0]-r) <= 1 && Math.abs(last[1]-c) <= 1) {
+      currentPath.push([r,c]);
+    }
+  }
+  updateSelecting();
+}
+
+function endSelect() {
+  if (!selecting) return;
+  selecting = false;
+  checkWord();
+}
+
+function updateSelecting() {
+  // Clear all selecting styles
+  document.querySelectorAll('.cell.selecting').forEach(el => el.classList.remove('selecting'));
+  // Apply to current path
+  currentPath.forEach(([r,c]) => {
+    const cell = document.getElementById(`cell-${r}-${c}`);
+    if (cell && !cellStates[cellKey(r,c)]) cell.classList.add('selecting');
+  });
+  // Show current word
+  const word = currentPath.map(([r,c]) => LAYOUT[r][c]).join('');
+  document.getElementById('current-word').textContent = word;
+}
+
+function checkWord() {
+  const word = currentPath.map(([r,c]) => LAYOUT[r][c]).join('');
+  document.querySelectorAll('.cell.selecting').forEach(el => el.classList.remove('selecting'));
+  document.getElementById('current-word').textContent = '';
+
+  if (foundWords.includes(word)) {
+    showMessage('Already found! ✨');
+    currentPath = [];
+    return;
+  }
+
+  // Check against known words
+  const targetPath = WORD_PATHS[word];
+  if (targetPath) {
+    // Verify the path matches (order-independent for same cells)
+    const pathMatches = pathEqual(currentPath, targetPath);
+    if (pathMatches) {
+      // Found!
+      foundWords.push(word);
+      const type = WORD_TYPES[word];
+      const cssClass = type === 'spangram' ? 'found-spangram' : 'found-normal';
+      currentPath.forEach(([r,c]) => {
+        cellStates[cellKey(r,c)] = cssClass;
+        const cell = document.getElementById(`cell-${r}-${c}`);
+        if (cell) { cell.classList.remove('selecting'); cell.classList.add(cssClass); }
+      });
+
+      // Add to found words display
+      const el = document.createElement('div');
+      el.className = `found-word ${type}`;
+      el.textContent = word;
+      document.getElementById('foundWords').appendChild(el);
+
+      const messages = {
+        'PATIENT': 'Patient 💙 You wait for me every time',
+        'GENTLE': 'Gentle 🌸 Your heart is so soft',
+        'ADORABLE': 'Adorable 🥰 You literally are',
+        'SEXY': 'Sexy 🔥 Obviously 😏',
+        'RESPECTFUL': 'Respectful ✨ The most important one',
+        'FOODIE': 'Foodie 🍜 Our best dates are dinner ones',
+      };
+      showMessage(messages[word] || 'Found! 🎉');
+
+      if (foundWords.length === Object.keys(WORD_PATHS).length) {
+        setTimeout(() => document.getElementById('resultOverlay').classList.add('active'), 800);
+      }
+    } else {
+      wrongGuess();
+    }
+  } else {
+    wrongGuess();
+  }
+  currentPath = [];
+}
+
+function pathEqual(a, b) {
+  if (a.length !== b.length) return false;
+  // Check if same cells regardless of direction
+  const aKeys = new Set(a.map(([r,c]) => cellKey(r,c)));
+  const bKeys = new Set(b.map(([r,c]) => cellKey(r,c)));
+  if (aKeys.size !== bKeys.size) return false;
+  for (const k of aKeys) { if (!bKeys.has(k)) return false; }
+  return true;
+}
+
+function wrongGuess() {
+  currentPath.forEach(([r,c]) => {
+    const cell = document.getElementById(`cell-${r}-${c}`);
+    if (cell) {
+      cell.classList.add('wrong-flash');
+      setTimeout(() => cell.classList.remove('wrong-flash'), 400);
+    }
+  });
+  showMessage('Not a word — try connecting differently! 💭');
+}
+
+let msgTO;
+function showMessage(msg) {
+  const el = document.getElementById('message');
+  el.textContent = msg;
+  clearTimeout(msgTO);
+  msgTO = setTimeout(() => el.textContent = '', 3000);
+}
+
+function resetGame() {
+  document.getElementById('resultOverlay').classList.remove('active');
+  init();
+}
+
+init();
+</script>
+</body>
+</html>
